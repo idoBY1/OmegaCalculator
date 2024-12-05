@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class IFormatter(ABC):
     @abstractmethod
     def format_str(self, expression: str) -> str:
@@ -9,6 +10,7 @@ class IFormatter(ABC):
         :return: A formated string expression
         """
         pass
+
 
 class InfixToPostfixFormatter(IFormatter):
     def format_str(self, expression: str) -> str:

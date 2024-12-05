@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class IInputHandler(ABC):
     @abstractmethod
     def get_input_str(self) -> str:
@@ -9,6 +10,7 @@ class IInputHandler(ABC):
         """
         pass
 
+
 class ConsoleInputHandler(IInputHandler):
     def get_input_str(self) -> str:
-        pass
+        return input()

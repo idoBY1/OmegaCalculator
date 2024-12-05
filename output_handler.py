@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class IOutputHandler(ABC):
     @abstractmethod
     def output_str(self, output: str) -> None:
@@ -9,6 +10,7 @@ class IOutputHandler(ABC):
         """
         pass
 
+
 class ConsoleOutputHandler(IOutputHandler):
     def output_str(self, output: str) -> None:
-        pass
+        print(output, end="")
