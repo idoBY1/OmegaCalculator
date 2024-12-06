@@ -33,7 +33,7 @@ class IStack(ABC):
         """
         Check if the stack is empty.
         :return: A boolean value, ``True`` if the stack is empty and ``False`` if the
-        stack has at least one item
+            stack has at least one item
         """
         pass
 
