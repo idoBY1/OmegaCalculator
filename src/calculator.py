@@ -1,7 +1,7 @@
-import expression_formatter
-import input_handler
-import solver
-import user_interaction_handler
+import src.calculatorLogic.expression_formatter as expression_formatter
+import src.calculatorLogic.solver as solver
+import src.userInteraction.input_handler as input_handler
+import src.userInteraction.user_interaction_handler as user_interaction_handler
 
 
 class Calculator:
@@ -17,4 +17,5 @@ class Calculator:
         """
         Run the Calculator.
         """
-        pass
+        s = self.user_interaction_handler.get_input_expression("Enter something: ")
+        print(s)

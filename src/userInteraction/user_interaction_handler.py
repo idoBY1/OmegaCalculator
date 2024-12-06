@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-import input_handler
-import output_handler
+import src.userInteraction.input_handler as input_handler
+import src.userInteraction.output_handler as output_handler
 
 
 class IUserInteractionHandler(ABC):
@@ -24,5 +24,5 @@ class ConsoleInteractionHandler(IUserInteractionHandler):
         self._output_handler = output_handler.ConsoleOutputHandler()
 
     def get_input_expression(self, input_msg: str) -> str:
-        self._output_handler.output_str(input_msg + " ")
+        self._output_handler.output_str(input_msg)
         return self._input_handler.get_input_str()
