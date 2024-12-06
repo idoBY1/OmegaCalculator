@@ -17,5 +17,4 @@ class Calculator:
         """
         Run the Calculator.
         """
-        s = self.user_interaction_handler.get_input_expression("Enter something: ")
-        print(s)
+        pass
