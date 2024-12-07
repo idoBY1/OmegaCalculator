@@ -1,7 +1,8 @@
 from math import inf, gamma
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from enum import Enum
+from typing import Dict
+
 
 class Operator(ABC):
     """
@@ -26,6 +27,20 @@ class Operator(ABC):
         return self._symbol
 
 
+class IDefinedOperators(ABC):
+    @abstractmethod
+    def get_operators_dict(self) -> Dict[str, Operator]:
+        """
+        Get a dictionary of all the defined operators. The keys of the dictionary are
+        the symbols of the Operators stored as the values. A ContainerOperator should have
+        two entries in the dictionary, one with the opening symbol as the key and one with
+        the closing symbol as the key.
+        :return: The dictionary containing the pairs of strings and Operators
+        """
+        pass
+
+
+# Subclasses of Operator
 class UnaryOperator(Operator):
     """
     An operator that operates on a single value.
