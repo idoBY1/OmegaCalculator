@@ -1,10 +1,12 @@
-import math
+from math import inf, gamma
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
-@dataclass
 class Operator(ABC):
+    """
+    An abstract operator.
+    """
     _priority: int
     _symbol: str
 
@@ -25,6 +27,11 @@ class Operator(ABC):
 
 
 class UnaryOperator(Operator):
+    """
+    An operator that operates on a single value.
+
+    Examples: factorial(!), negation(~)
+    """
     class OperandPos(Enum):
         """
         This class indicates the position of the operand relative to the
@@ -47,12 +54,42 @@ class UnaryOperator(Operator):
 
 
 class BinaryOperator(Operator):
+    """
+    An operator that operates on two values and returns one.
+
+    Examples: addition(+), division(/)
+    """
     @abstractmethod
     def operate(self, num1: float, num2: float) -> float:
         """
         Perform the operation on the numbers and return a result.
         :param num1: The first floating point number to perform the operation with
         :param num2: The second floating point number to perform the operation with
+        :return: The result of the operation as a floating point number
+        """
+        pass
+
+class ContainerOperator(Operator):
+    """
+    An operator that operates on a defined and enclosed part of an expression.
+
+    Examples: brackets(())
+    (could be used for other purposes like implementing sin(x) or |x|)
+    """
+    _end_symbol: str
+
+    def get_end_symbol(self):
+        """
+        Get the symbol representing the end of the operation in a math expression.
+        :return: The symbol as a string
+        """
+        return self._end_symbol
+
+    @abstractmethod
+    def operate(self, num: float) -> float:
+        """
+        Perform the operation on the number and return a result.
+        :param num: A floating point number to perform the operation with
         :return: The result of the operation as a floating point number
         """
         pass
@@ -158,6 +195,15 @@ class Factorial(UnaryOperator):
 
     def operate(self, num: float) -> float:
         try:
-            return math.gamma(num + 1) # extension of factorial to real numbers
+            return gamma(num + 1) # extension of factorial to real numbers
         except ValueError:
             print("Cannot compute factorial of " + str(num) + "!")
+
+class Brackets(ContainerOperator):
+    def __init__(self):
+        self._symbol = '('
+        self._end_symbol = ')'
+        self._priority = inf # brackets will always have the highest priority
+
+    def operate(self, num: float) -> float:
+        return num # brackets do not change the value given to them
