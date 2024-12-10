@@ -31,6 +31,7 @@ class IDefinedOperators(ABC):
     """
     A class that implements this interface will provide the operators for the calculator.
     """
+
     @abstractmethod
     def get_operators_dict(self) -> Dict[str, Operator]:
         """
@@ -149,6 +150,7 @@ class Addition(BinaryOperator):
 
     In an expression: a + b
     """
+
     def __init__(self):
         self._symbol = '+'
         self._priority = 1
@@ -165,6 +167,7 @@ class Subtraction(BinaryOperator):
 
     In an expression: a - b
     """
+
     def __init__(self):
         self._symbol = '-'
         self._priority = 1
@@ -181,6 +184,7 @@ class Multiplication(BinaryOperator):
 
     In an expression: a * b
     """
+
     def __init__(self):
         self._symbol = '*'
         self._priority = 2
@@ -197,6 +201,7 @@ class Division(BinaryOperator):
 
     In an expression: a / b
     """
+
     def __init__(self):
         self._symbol = '/'
         self._priority = 2
@@ -213,6 +218,7 @@ class Power(BinaryOperator):
 
     In an expression: a ^ b
     """
+
     def __init__(self):
         self._symbol = '^'
         self._priority = 3
@@ -229,6 +235,7 @@ class Modulo(BinaryOperator):
 
     In an expression: a % b
     """
+
     def __init__(self):
         self._symbol = '%'
         self._priority = 4
@@ -245,6 +252,7 @@ class Max(BinaryOperator):
 
     In an expression: a $ b
     """
+
     def __init__(self):
         self._symbol = '$'
         self._priority = 5
@@ -261,6 +269,7 @@ class Min(BinaryOperator):
 
     In an expression: a & b
     """
+
     def __init__(self):
         self._symbol = '&'
         self._priority = 5
@@ -277,6 +286,7 @@ class Average(BinaryOperator):
 
     In an expression: a @ b
     """
+
     def __init__(self):
         self._symbol = '@'
         self._priority = 5
@@ -293,6 +303,7 @@ class Negation(UnaryOperator):
 
     In an expression: ~x
     """
+
     def __init__(self):
         self._symbol = '~'
         self._priority = 6
@@ -310,6 +321,7 @@ class Factorial(UnaryOperator):
 
     In an expression: x!
     """
+
     def __init__(self):
         self._symbol = '!'
         self._priority = 6
@@ -332,6 +344,7 @@ class Brackets(ContainerOperator):
 
     In an expression: (x)
     """
+
     def __init__(self):
         self._symbol = '('
         self._end_symbol = ')'

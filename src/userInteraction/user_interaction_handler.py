@@ -5,6 +5,9 @@ import src.userInteraction.output_handler as output_handler
 
 
 class IUserInteractionHandler(ABC):
+    """
+    Interface for handling input and output from and to the user
+    """
     _input_handler: input_handler.IInputHandler
     _output_handler: output_handler.IOutputHandler
 
@@ -19,6 +22,10 @@ class IUserInteractionHandler(ABC):
 
 
 class ConsoleInteractionHandler(IUserInteractionHandler):
+    """
+    Class for receiving and outputting text to the console (command-line).
+    """
+
     def __init__(self):
         self._input_handler = input_handler.ConsoleInputHandler()
         self._output_handler = output_handler.ConsoleOutputHandler()

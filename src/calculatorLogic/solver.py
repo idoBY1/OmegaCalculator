@@ -1,7 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Dict
+
+from src.calculatorLogic.operator import Operator, UnaryOperator, BinaryOperator, ContainerOperator
 
 
 class ISolver(ABC):
+    """
+    Interface for solving a mathematical expression.
+    """
+
     @abstractmethod
     def solve(self, formatted_expression: str) -> float:
         """
@@ -12,6 +19,14 @@ class ISolver(ABC):
         """
         pass
 
+
 class PostfixSolver(ISolver):
+    """
+    Class for solving mathematical expressions in postfix notation.
+    """
+
+    def __init__(self, operators_dictionary: Dict[str, Operator]):
+        self._op_dict = operators_dictionary
+
     def solve(self, formatted_expression: str) -> float:
         pass

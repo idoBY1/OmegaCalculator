@@ -2,7 +2,6 @@ from typing import Dict
 
 import src.calculatorLogic.expression_formatter as expression_formatter
 import src.calculatorLogic.solver as solver
-import src.userInteraction.input_handler as input_handler
 import src.userInteraction.user_interaction_handler as user_interaction_handler
 import src.calculatorLogic.operator as operator
 
@@ -12,6 +11,7 @@ class OmegaDefinedOperators(operator.BaseDefinedOperators):
     Defines the operators for the calculator. All the operations that can be performed by the calculator
     are defined in the dictionary provided by an instance of this class.
     """
+
     def __init__(self):
         self._add_op(operator.Addition())
         self._add_op(operator.Subtraction())
@@ -35,8 +35,8 @@ class Calculator:
         self.defined_operators = OmegaDefinedOperators()
 
         self.user_interaction_handler = user_interaction_handler.ConsoleInteractionHandler()
-        self.formatter = expression_formatter.InfixToPostfixFormatter()
-        self.solver = solver.PostfixSolver()
+        self.formatter = expression_formatter.InfixToPostfixFormatter(self.defined_operators.get_operators_dict())
+        self.solver = solver.PostfixSolver(self.defined_operators.get_operators_dict())
 
     def run(self):
         """
