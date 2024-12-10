@@ -28,16 +28,43 @@ class Operator(ABC):
 
 
 class IDefinedOperators(ABC):
+    """
+    A class that implements this interface will provide the operators for the calculator.
+    """
     @abstractmethod
     def get_operators_dict(self) -> Dict[str, Operator]:
         """
         Get a dictionary of all the defined operators. The keys of the dictionary are
-        the symbols of the Operators stored as the values. A ContainerOperator should have
-        two entries in the dictionary, one with the opening symbol as the key and one with
-        the closing symbol as the key.
+        the symbols of the Operators stored as the values.
         :return: The dictionary containing the pairs of strings and Operators
         """
         pass
+
+
+class BaseDefinedOperators(IDefinedOperators, ABC):
+    """
+    Subclasses of this class define the operators for the calculator. All the operations that can be performed by
+    the calculator are defined in the dictionary provided by an instance of a subclass of this class.
+    """
+    _op_dict: Dict[str, Operator]
+
+    def get_operators_dict(self) -> Dict[str, Operator]:
+        return self._op_dict
+
+    def _add_op(self, operator: Operator) -> bool:
+        """
+        Assign a new operator to this object's dictionary. This method is
+        intended to be used by subclasses of BaseDefinedOperators.
+        :param operator: The operator to add to the dictionary
+        :return: ``True`` if the operator was successfully added to the dictionary and ``False`` if
+            the dictionary already contained an operator with this symbol
+        """
+        if operator.get_symbol() in self._op_dict.keys():
+            return False
+
+        self._op_dict[operator.get_symbol()] = operator
+
+        return True
 
 
 # Subclasses of Operator
@@ -47,6 +74,7 @@ class UnaryOperator(Operator):
 
     Examples: factorial(!), negation(~)
     """
+
     class OperandPos(Enum):
         """
         This class indicates the position of the operand relative to the
@@ -74,6 +102,7 @@ class BinaryOperator(Operator):
 
     Examples: addition(+), division(/)
     """
+
     @abstractmethod
     def operate(self, num1: float, num2: float) -> float:
         """
@@ -83,6 +112,7 @@ class BinaryOperator(Operator):
         :return: The result of the operation as a floating point number
         """
         pass
+
 
 class ContainerOperator(Operator):
     """
@@ -112,6 +142,13 @@ class ContainerOperator(Operator):
 
 # The actual operators are implemented here
 class Addition(BinaryOperator):
+    """
+    The binary operator for addition.
+
+    Symbol: '+'
+
+    In an expression: a + b
+    """
     def __init__(self):
         self._symbol = '+'
         self._priority = 1
@@ -121,6 +158,13 @@ class Addition(BinaryOperator):
 
 
 class Subtraction(BinaryOperator):
+    """
+    The binary operator for subtraction.
+
+    Symbol: '-'
+
+    In an expression: a - b
+    """
     def __init__(self):
         self._symbol = '-'
         self._priority = 1
@@ -130,6 +174,13 @@ class Subtraction(BinaryOperator):
 
 
 class Multiplication(BinaryOperator):
+    """
+    The binary operator for multiplication.
+
+    Symbol: '*'
+
+    In an expression: a * b
+    """
     def __init__(self):
         self._symbol = '*'
         self._priority = 2
@@ -139,6 +190,13 @@ class Multiplication(BinaryOperator):
 
 
 class Division(BinaryOperator):
+    """
+    The binary operator for division.
+
+    Symbol: '/'
+
+    In an expression: a / b
+    """
     def __init__(self):
         self._symbol = '/'
         self._priority = 2
@@ -148,6 +206,13 @@ class Division(BinaryOperator):
 
 
 class Power(BinaryOperator):
+    """
+    The binary operator for power.
+
+    Symbol: '^'
+
+    In an expression: a ^ b
+    """
     def __init__(self):
         self._symbol = '^'
         self._priority = 3
@@ -157,6 +222,13 @@ class Power(BinaryOperator):
 
 
 class Modulo(BinaryOperator):
+    """
+    The binary operator for modulo.
+
+    Symbol: '%'
+
+    In an expression: a % b
+    """
     def __init__(self):
         self._symbol = '%'
         self._priority = 4
@@ -166,6 +238,13 @@ class Modulo(BinaryOperator):
 
 
 class Max(BinaryOperator):
+    """
+    The binary operator for the maximum of two numbers.
+
+    Symbol: '$'
+
+    In an expression: a $ b
+    """
     def __init__(self):
         self._symbol = '$'
         self._priority = 5
@@ -175,6 +254,13 @@ class Max(BinaryOperator):
 
 
 class Min(BinaryOperator):
+    """
+    The binary operator for the minimum of two numbers.
+
+    Symbol: '&'
+
+    In an expression: a & b
+    """
     def __init__(self):
         self._symbol = '&'
         self._priority = 5
@@ -184,6 +270,13 @@ class Min(BinaryOperator):
 
 
 class Average(BinaryOperator):
+    """
+    The binary operator for the average of two numbers.
+
+    Symbol: '@'
+
+    In an expression: a @ b
+    """
     def __init__(self):
         self._symbol = '@'
         self._priority = 5
@@ -193,6 +286,13 @@ class Average(BinaryOperator):
 
 
 class Negation(UnaryOperator):
+    """
+    The unary operator for negation.
+
+    Symbol: '~'
+
+    In an expression: ~x
+    """
     def __init__(self):
         self._symbol = '~'
         self._priority = 6
@@ -203,6 +303,13 @@ class Negation(UnaryOperator):
 
 
 class Factorial(UnaryOperator):
+    """
+    The unary operator for factorial.
+
+    Symbol: '!'
+
+    In an expression: x!
+    """
     def __init__(self):
         self._symbol = '!'
         self._priority = 6
@@ -210,15 +317,25 @@ class Factorial(UnaryOperator):
 
     def operate(self, num: float) -> float:
         try:
-            return gamma(num + 1) # extension of factorial to real numbers
+            return gamma(num + 1)  # extension of factorial to real numbers
         except ValueError:
             print("Cannot compute factorial of " + str(num) + "!")
 
+
 class Brackets(ContainerOperator):
+    """
+    The container operator for brackets.
+
+    Symbol: '('
+
+    End symbol: ')'
+
+    In an expression: (x)
+    """
     def __init__(self):
         self._symbol = '('
         self._end_symbol = ')'
-        self._priority = inf # brackets will always have the highest priority
+        self._priority = int(inf)  # brackets will always have the highest priority
 
     def operate(self, num: float) -> float:
-        return num # brackets do not change the value given to them
+        return num  # brackets do not change the value given to them
