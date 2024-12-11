@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict
 
+HIGHEST_OPERATOR_PRIORITY = 999 # All operators should have equal or lower priority from this value
 
 class Operator(ABC):
     """
@@ -47,7 +48,7 @@ class BaseDefinedOperators(IDefinedOperators, ABC):
     Subclasses of this class define the operators for the calculator. All the operations that can be performed by
     the calculator are defined in the dictionary provided by an instance of a subclass of this class.
     """
-    _op_dict: Dict[str, Operator]
+    _op_dict: Dict[str, Operator] = {}
 
     def get_operators_dict(self) -> Dict[str, Operator]:
         return self._op_dict
@@ -348,7 +349,7 @@ class Brackets(ContainerOperator):
     def __init__(self):
         self._symbol = '('
         self._end_symbol = ')'
-        self._priority = int(inf)  # brackets will always have the highest priority
+        self._priority = HIGHEST_OPERATOR_PRIORITY  # brackets will always have the highest priority
 
     def operate(self, num: float) -> float:
         return num  # brackets do not change the value given to them

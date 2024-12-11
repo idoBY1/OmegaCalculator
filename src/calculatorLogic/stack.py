@@ -3,6 +3,10 @@ from typing import Any
 
 
 class IStack(ABC):
+    """
+    Interface for a stack data structure.
+    """
+
     @abstractmethod
     def push(self, item: Any) -> Any:
         """
@@ -38,14 +42,26 @@ class IStack(ABC):
         pass
 
     @abstractmethod
+    def empty(self) -> None:
+        """
+        Clear the stack from values. After calling this method the stack will be empty.
+        """
+        pass
+
+    @abstractmethod
     def __len__(self) -> int:
         """
-        Get the number of items in the stack
+        Get the number of items in the stack.
         :return: The number of items in the stack
         """
         pass
 
+
 class ListStack(IStack):
+    """
+    Stack implementation using a list.
+    """
+
     def __init__(self):
         self._items = []
 
@@ -60,6 +76,9 @@ class ListStack(IStack):
 
     def is_empty(self) -> bool:
         return len(self._items) == 0
+
+    def empty(self) -> None:
+        self._items.clear()
 
     def __len__(self) -> int:
         return len(self._items)

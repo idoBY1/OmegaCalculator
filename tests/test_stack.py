@@ -45,6 +45,17 @@ class TestListStack:
 
         assert s.is_empty()
 
+    def test_empty(self):
+        s = ListStack()
+
+        s.push(1)
+        s.push(2)
+        s.push(3)
+
+        s.empty()
+
+        assert s.is_empty()
+
     def test_len(self):
         s = ListStack()
 

@@ -42,4 +42,5 @@ class Calculator:
         """
         Run the Calculator.
         """
-        pass
+        user_input = self.user_interaction_handler.get_input_expression("Enter an expression: \n")
+        print(self.formatter.format_str(user_input))
