@@ -25,6 +25,7 @@ class OmegaDefinedOperators(operator.BaseDefinedOperators):
         self._add_op(operator.Negation())
         self._add_op(operator.Factorial())
         self._add_op(operator.Brackets())
+        self._add_op(operator.Minus())
 
 
 class Calculator:
@@ -43,4 +44,8 @@ class Calculator:
         Run the Calculator.
         """
         user_input = self.user_interaction_handler.get_input_expression("Enter an expression: \n")
-        print(self.formatter.format_str(user_input))
+        symbol_list = self.formatter.extract_symbols(user_input)
+        print(symbol_list)
+
+        formatted_expression = self.formatter.format_expression(symbol_list)
+        print(formatted_expression)

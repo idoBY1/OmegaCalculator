@@ -88,6 +88,9 @@ class UnaryOperator(Operator):
 
     _operand_pos: OperandPos
 
+    def get_operand_pos(self):
+        return self._operand_pos
+
     @abstractmethod
     def operate(self, num: float) -> float:
         """
@@ -239,7 +242,7 @@ class Modulo(BinaryOperator):
 
     def __init__(self):
         self._symbol = '%'
-        self._priority = 4
+        self._priority = 5
 
     def operate(self, num1: float, num2: float) -> float:
         return num1 % num2
@@ -256,7 +259,7 @@ class Max(BinaryOperator):
 
     def __init__(self):
         self._symbol = '$'
-        self._priority = 5
+        self._priority = 6
 
     def operate(self, num1: float, num2: float) -> float:
         return num1 if num1 > num2 else num2
@@ -273,7 +276,7 @@ class Min(BinaryOperator):
 
     def __init__(self):
         self._symbol = '&'
-        self._priority = 5
+        self._priority = 6
 
     def operate(self, num1: float, num2: float) -> float:
         return num1 if num1 < num2 else num2
@@ -290,7 +293,7 @@ class Average(BinaryOperator):
 
     def __init__(self):
         self._symbol = '@'
-        self._priority = 5
+        self._priority = 6
 
     def operate(self, num1: float, num2: float) -> float:
         return (num1 + num2) / 2.0
@@ -307,12 +310,28 @@ class Negation(UnaryOperator):
 
     def __init__(self):
         self._symbol = '~'
-        self._priority = 6
+        self._priority = 7
         self._operand_pos = UnaryOperator.OperandPos.AFTER
 
     def operate(self, num: float) -> float:
         return -num
 
+class Minus(UnaryOperator):
+    """
+    The unary operator for flipping a numbers sign.
+
+    Symbol: '-_'
+
+    In an expression: -x
+    """
+
+    def __init__(self):
+        self._symbol = "-_"
+        self._priority = 4
+        self._operand_pos = UnaryOperator.OperandPos.AFTER
+
+    def operate(self, num: float) -> float:
+        return -num
 
 class Factorial(UnaryOperator):
     """
@@ -325,7 +344,7 @@ class Factorial(UnaryOperator):
 
     def __init__(self):
         self._symbol = '!'
-        self._priority = 6
+        self._priority = 7
         self._operand_pos = UnaryOperator.OperandPos.BEFORE
 
     def operate(self, num: float) -> float:
