@@ -205,6 +205,10 @@ class InfixToPostfixFormatter(IFormatter):
                 print(f"Error: Invalid expression, did not recognize symbol '{symbol}'")
                 return []
 
+        if not left_operators.is_empty():
+            print(f"Error: Invalid expression, some operators without operands")
+            return []
+
         while not self._op_stack.is_empty():
             postfix_expression.append(self._op_stack.pop())
 
