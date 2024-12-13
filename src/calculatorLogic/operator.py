@@ -345,7 +345,7 @@ class Minus(UnaryOperator):
 
     def __init__(self):
         self._symbol = "-_"
-        self._priority = 4
+        self._priority = 10
         self._operand_pos = UnaryOperator.OperandPos.AFTER
 
     def operate(self, num: float) -> float:
