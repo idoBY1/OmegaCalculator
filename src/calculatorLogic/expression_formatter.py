@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Any
 
-from src.calculatorLogic import stack, operator
+from src.calculatorLogic import stack, operator, calc_utils
 from src.calculatorLogic.operator import Operator, UnaryOperator, BinaryOperator, ContainerOperator
 
 
@@ -63,7 +63,7 @@ class InfixToPostfixFormatter(IFormatter):
                     temp_symbol = ""
 
                 symbol_list.append(ch)
-            elif temp_symbol.isdigit() and not ch.isdigit():
+            elif calc_utils.is_float_str(temp_symbol) and not calc_utils.is_float_str(temp_symbol + ch):
                 symbol_list.append(temp_symbol)
                 temp_symbol = ""
 
@@ -76,6 +76,7 @@ class InfixToPostfixFormatter(IFormatter):
 
         return symbol_list
 
+    # Helper function
     def correct_regualr_operator_pos(self, expression: List[str], i: int):
         # can be a binary operator only if not on first symbol and only
         # if the last symbol is not also an operator (except for unary operators that come after numbers)
@@ -89,6 +90,7 @@ class InfixToPostfixFormatter(IFormatter):
                      )
                 )
 
+    # Helper function
     def free_left_operators(self, left_operators: stack.IStack, postfix_expression: List[str]):
         while ((not left_operators.is_empty()) and
                (not isinstance(self._op_dict[left_operators.top()], operator.ContainerOperator))):
@@ -105,7 +107,7 @@ class InfixToPostfixFormatter(IFormatter):
 
                 self._op_stack.push(curr_op)
 
-    def format_expression(self, expression: List[str]) -> List[str]:
+    def format_expression(self, expression: List[str]) -> List[Any]:
         self._op_stack.empty()
         postfix_expression = []
 
