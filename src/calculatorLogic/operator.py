@@ -1,4 +1,3 @@
-from math import inf, gamma
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict
@@ -25,6 +24,9 @@ class Operator(ABC):
         Get the symbol representing the operation in a math expression.
         :return: The symbol as a string
         """
+        return self._symbol
+
+    def __str__(self) -> str:
         return self._symbol
 
 
@@ -69,6 +71,17 @@ class BaseDefinedOperators(IDefinedOperators, ABC):
         return True
 
 
+class CalculationError(Exception):
+    """
+    Exception raised for errors occurring mid-calculation of an expression.
+    """
+
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 # Subclasses of Operator
 class UnaryOperator(Operator):
     """
@@ -97,6 +110,7 @@ class UnaryOperator(Operator):
         Perform the operation on the number and return a result.
         :param num: A floating point number to perform the operation with
         :return: The result of the operation as a floating point number
+        :raises CalculationError: If the operation failed because of its calculation
         """
         pass
 
@@ -115,9 +129,9 @@ class BinaryOperator(Operator):
         :param num1: The first floating point number to perform the operation with
         :param num2: The second floating point number to perform the operation with
         :return: The result of the operation as a floating point number
+        :raises CalculationError: If the operation failed because of its calculation
         """
         pass
-
 
 class ContainerOperator(Operator):
     """
@@ -141,6 +155,7 @@ class ContainerOperator(Operator):
         Perform the operation on the number and return a result.
         :param num: A floating point number to perform the operation with
         :return: The result of the operation as a floating point number
+        :raises CalculationError: If the operation failed because of its calculation
         """
         pass
 
@@ -211,6 +226,9 @@ class Division(BinaryOperator):
         self._priority = 2
 
     def operate(self, num1: float, num2: float) -> float:
+        if num2 == 0:
+            raise CalculationError("Cannot divide by zero")
+
         return num1 / num2
 
 
@@ -348,10 +366,18 @@ class Factorial(UnaryOperator):
         self._operand_pos = UnaryOperator.OperandPos.BEFORE
 
     def operate(self, num: float) -> float:
-        try:
-            return gamma(num + 1)  # extension of factorial to real numbers
-        except ValueError:
-            print("Cannot compute factorial of " + str(num) + "!")
+        if num < 0:
+            raise CalculationError(f"Cannot calculate the factorial of a negative number ({num}! = ???)")
+
+        if num % 1 != 0:
+            raise CalculationError(f"Can only calculate the factorial of a whole number ({num}! = ???)")
+
+        res = 1.0
+
+        for i in range(1, round(num) + 1):
+            res *= i
+
+        return res
 
 
 class Brackets(ContainerOperator):

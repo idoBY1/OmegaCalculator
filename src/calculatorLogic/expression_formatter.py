@@ -91,7 +91,7 @@ class InfixToPostfixFormatter(IFormatter):
                 )
 
     # Helper function
-    def free_left_operators(self, left_operators: stack.IStack, postfix_expression: List[str]):
+    def free_left_operators(self, left_operators: stack.IStack, postfix_expression: List[Any]):
         while ((not left_operators.is_empty()) and
                (not isinstance(self._op_dict[left_operators.top()], operator.ContainerOperator))):
             curr_op = self._op_dict[left_operators.pop()]
@@ -103,7 +103,7 @@ class InfixToPostfixFormatter(IFormatter):
             else:
                 while (
                         not self._op_stack.is_empty()) and curr_op.get_priority() <= self._op_stack.top().get_priority():
-                    postfix_expression.append(self._op_stack.pop().get_symbol())
+                    postfix_expression.append(self._op_stack.pop())
 
                 self._op_stack.push(curr_op)
 
@@ -122,17 +122,20 @@ class InfixToPostfixFormatter(IFormatter):
         for i in range(len(expression)):
             symbol = expression[i]
 
-            if symbol.isdigit():
-                postfix_expression.append(symbol)
+            if calc_utils.is_float_str(symbol):
+                try:
+                    postfix_expression.append(float(symbol))
+                except ValueError:
+                    print(f"Error: Failed to cast '{symbol}' to a floating point value")
 
                 self.free_left_operators(left_operators, postfix_expression)
             elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if ch is a closing symbol
                 while not isinstance(self._op_stack.top(), operator.ContainerOperator):  # if not reached opening symbol
-                    postfix_expression.append(self._op_stack.pop().get_symbol())
+                    postfix_expression.append(self._op_stack.pop())
 
                 curr_op = self._op_stack.pop()
 
-                postfix_expression.append(curr_op.get_symbol())  # add opening symbol to final expression
+                postfix_expression.append(curr_op)  # add opening symbol to final expression
 
                 opened_containers[curr_op] -= 1  # reduce opened containers count
 
@@ -160,7 +163,7 @@ class InfixToPostfixFormatter(IFormatter):
                         is_unary_left = True
                         curr_op = operator.Minus()
                     else:
-                        print("Error: The '{}' operator should only come after an operand".format(curr_op.get_symbol()))
+                        print(f"Error: The '{curr_op.get_symbol()}' operator should only come after an operand")
                         return []
 
                 # handle a mathematical exception: negation must come before a *number* and not any expression
@@ -185,7 +188,7 @@ class InfixToPostfixFormatter(IFormatter):
                     else:
                         while ((not self._op_stack.is_empty()) and not self._op_stack.top() in opened_containers.keys()
                                and curr_op.get_priority() <= self._op_stack.top().get_priority()):
-                            postfix_expression.append(self._op_stack.pop().get_symbol())
+                            postfix_expression.append(self._op_stack.pop())
 
                         self._op_stack.push(curr_op)
 
@@ -199,10 +202,10 @@ class InfixToPostfixFormatter(IFormatter):
                         # a left operator should be freed only after a container that comes after it is closed
                         left_operators.push(curr_op.get_symbol())
             else:
-                print("Error: Invalid expression, did not recognize symbol '{}'".format(symbol))
+                print(f"Error: Invalid expression, did not recognize symbol '{symbol}'")
                 return []
 
         while not self._op_stack.is_empty():
-            postfix_expression.append(self._op_stack.pop().get_symbol())
+            postfix_expression.append(self._op_stack.pop())
 
         return postfix_expression

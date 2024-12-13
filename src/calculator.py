@@ -48,4 +48,12 @@ class Calculator:
         print(symbol_list)
 
         formatted_expression = self.formatter.format_expression(symbol_list)
-        print(formatted_expression)
+        print([str(item) for item in formatted_expression])
+
+        if formatted_expression == [] and symbol_list != []:
+            return
+
+        is_error_free, result = self.solver.solve(formatted_expression)
+
+        if is_error_free:
+            print(f"The result of the expression is: {result}")
