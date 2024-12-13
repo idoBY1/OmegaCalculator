@@ -5,6 +5,7 @@ import src.calculatorLogic.solver as solver
 import src.userInteraction.user_interaction_handler as user_interaction_handler
 import src.calculatorLogic.operator as operator
 
+EXIT_INPUT = "exit"
 
 class OmegaDefinedOperators(operator.BaseDefinedOperators):
     """
@@ -43,17 +44,26 @@ class Calculator:
         """
         Run the Calculator.
         """
-        user_input = self.user_interaction_handler.get_input_expression("Enter an expression: \n")
-        symbol_list = self.formatter.extract_symbols(user_input)
-        print(symbol_list)
+        self.user_interaction_handler.display(f"Enter expressions to evaluate "
+                                              f"(enter '{EXIT_INPUT}' to exit the program): ")
 
-        formatted_expression = self.formatter.format_expression(symbol_list)
-        print([str(item) for item in formatted_expression])
+        continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT)
 
-        if formatted_expression == [] and symbol_list != []:
-            return
+        while continue_running:
+            symbol_list = self.formatter.extract_symbols(user_input)
+            # print(symbol_list)
 
-        is_error_free, result = self.solver.solve(formatted_expression)
+            formatted_expression = self.formatter.format_expression(symbol_list)
+            # print([str(item) for item in formatted_expression])
 
-        if is_error_free:
-            print(f"The result of the expression is: {result}")
+            # The format_expression function returns [] when an error occurred
+            if not (formatted_expression == []):
+                is_error_free, result = self.solver.solve(formatted_expression)
+
+                if is_error_free:
+                    print(f"= {result}")
+
+            # get next input from the user
+            continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT)
+
+        self.user_interaction_handler.display("Exiting program...")
