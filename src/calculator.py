@@ -1,16 +1,17 @@
-from typing import Dict
+from typing import Dict, List
 
 import src.calculatorLogic.expression_formatter as expression_formatter
 import src.calculatorLogic.solver as solver
 import src.userInteraction.user_interaction_handler as user_interaction_handler
 import src.calculatorLogic.operator as operator
+from src.calculatorLogic.operator import Operator
 
 EXIT_INPUT = "exit"
 
 class OmegaDefinedOperators(operator.BaseDefinedOperators):
     """
     Defines the operators for the calculator. All the operations that can be performed by the calculator
-    are defined in the dictionary provided by an instance of this class.
+    are provided by an instance of this class.
     """
 
     def __init__(self):
@@ -27,6 +28,32 @@ class OmegaDefinedOperators(operator.BaseDefinedOperators):
         self._add_op(operator.Factorial())
         self._add_op(operator.Brackets())
         self._add_op(operator.Minus())
+        self._add_op(operator.NegativeSign())
+
+    def resolve_overloads(self, expression: List[str], position: int) -> Operator:
+        op_symbol = expression[position]
+
+        match op_symbol:
+            case '-':
+                if position <= 0: # if the first symbol, must be unary minus
+                    return self._get_overloaded_by_class(op_symbol, operator.Minus)
+
+                try:
+                    prev_op = self.get_operator(expression, position - 1)
+                except ValueError:
+                    # previous symbol was not an operator
+                    return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
+
+                if isinstance(prev_op, operator.ContainerOperator): # if start of an independent expression
+                    return self._get_overloaded_by_class(op_symbol, operator.Minus)
+                elif (isinstance(prev_op, operator.BinaryOperator) # if after an operator that requires a value
+                      or (isinstance(prev_op, operator.UnaryOperator)
+                          and prev_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER)):
+                    return self._get_overloaded_by_class(op_symbol, operator.NegativeSign)
+                else: # default case
+                    return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
+            case _:
+                return self._op_dict[op_symbol]
 
 
 class Calculator:

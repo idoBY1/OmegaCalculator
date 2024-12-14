@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Any
 
 from src.calculatorLogic import stack, operator, calc_utils
+from src.calculatorLogic.calc_utils import organize_whitespace
 from src.calculatorLogic.operator import Operator, UnaryOperator, BinaryOperator, ContainerOperator
 
 
@@ -40,16 +41,27 @@ class InfixToPostfixFormatter(IFormatter):
 
         self._op_stack = stack.ListStack()
 
+    def is_start_of_expression(self, expression: str, i: int) -> bool:
+        # in the start of a contained math expression only if it's the start or
+        # the last operator is a container
+        return (i == 0 or isinstance(self._op_dict[expression[i - 1]], operator.ContainerOperator)
+                or (i > 1 and expression[i - 1].isspace()
+                    and isinstance(self._op_dict[expression[i - 2]], operator.ContainerOperator))) # this check works because of organize_whitespace()
+
     def extract_symbols(self, expression: str) -> List[str]:
         symbol_list = []
         temp_symbol = ""
+
+        expression = organize_whitespace(expression) # delete repeats of spaces
 
         closing_symbols = []  # all end symbols will be stored in this list
         for op in self._op_dict.values():
             if isinstance(op, operator.ContainerOperator):
                 closing_symbols.append(op.get_end_symbol())
 
-        for ch in expression:
+        for i in range(len(expression)):
+            ch = expression[i]
+
             if ch.isspace():
                 if temp_symbol != "":
                     symbol_list.append(temp_symbol)

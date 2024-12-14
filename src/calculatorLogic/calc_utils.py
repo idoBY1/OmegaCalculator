@@ -5,3 +5,6 @@ def is_float_str(value: str) -> bool:
 
     # Check if the cleaned string consists only of digits
     return cleaned_value.isdigit()
+
+def organize_whitespace(expression: str) -> str:
+    return " ".join(expression.split())

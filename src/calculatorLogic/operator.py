@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict
+from typing import Dict, List, Any
 
 HIGHEST_OPERATOR_PRIORITY = 999 # All operators should have equal or lower priority from this value
 
@@ -36,11 +36,33 @@ class IDefinedOperators(ABC):
     """
 
     @abstractmethod
-    def get_operators_dict(self) -> Dict[str, Operator]:
+    def get_operators_dict(self) -> Dict[str, Any]:
         """
         Get a dictionary of all the defined operators. The keys of the dictionary are
-        the symbols of the Operators stored as the values.
+        the symbols of the Operators stored as the values. Sometimes a list will be stored as
+        the value of a key and when this happens, resolve_overloads() function should be called.
         :return: The dictionary containing the pairs of strings and Operators
+        """
+        pass
+
+    def get_operator(self, expression: List[str], position: int) -> Operator:
+        """
+        Returns the operator at that position of the expression.
+        :param expression: The expression of string symbols.
+        :param position: The index of the operator at the list representing the expression.
+        :return: The correct operator for this position.
+        :raises ValueError: If the item at the given position is not an operator
+        """
+        pass
+
+    @abstractmethod
+    def resolve_overloads(self, expression: List[str], position: int) -> Operator:
+        """
+        Given a position with an overloaded operator, this function decides and returns the correct operator at this
+        position in the expression. This function resolves all overloaded operators at this DefinedOperators.
+        :param expression: The expression of string symbols.
+        :param position: The index of the overloaded operator at the list representing the expression.
+        :return: The correct operator for this position.
         """
         pass
 
@@ -50,25 +72,46 @@ class BaseDefinedOperators(IDefinedOperators, ABC):
     Subclasses of this class define the operators for the calculator. All the operations that can be performed by
     the calculator are defined in the dictionary provided by an instance of a subclass of this class.
     """
-    _op_dict: Dict[str, Operator] = {}
+    _op_dict: Dict[str, Any] = {}
 
-    def get_operators_dict(self) -> Dict[str, Operator]:
+    def get_operators_dict(self) -> Dict[str, Any]:
         return self._op_dict
 
-    def _add_op(self, operator: Operator) -> bool:
+    def _add_op(self, operator: Operator) -> None:
         """
         Assign a new operator to this object's dictionary. This method is
         intended to be used by subclasses of BaseDefinedOperators.
         :param operator: The operator to add to the dictionary
-        :return: ``True`` if the operator was successfully added to the dictionary and ``False`` if
-            the dictionary already contained an operator with this symbol
         """
-        if operator.get_symbol() in self._op_dict.keys():
-            return False
+        if operator.get_symbol() in self._op_dict.keys(): # if overloaded operator, add to a list
+            if not isinstance(self._op_dict[operator.get_symbol()], list): # if list still does not exist, create it
+                temp = self._op_dict[operator.get_symbol()]
+                self._op_dict[operator.get_symbol()] = [ temp ]
 
-        self._op_dict[operator.get_symbol()] = operator
+            self._op_dict[operator.get_symbol()].append(operator)
+        else:
+            self._op_dict[operator.get_symbol()] = operator
 
-        return True
+    def _get_overloaded_by_class(self, op_symbol: str, op_type: type) -> Operator:
+        """
+        Get the desired overloaded operator from the dict.
+        :param op_symbol: The key of the operator in the dictionary.
+        :param op_type: The type of the operator to get.
+        :return: The desired operator from this entry in the dict.
+        """
+        return next((op for op in self._op_dict[op_symbol] if isinstance(op, op_type)),
+                    self._op_dict[op_symbol][0])
+
+    def get_operator(self, expression: List[str], position: int) -> Operator:
+        op_symbol = expression[position]
+
+        if not op_symbol in self._op_dict.keys():
+            raise ValueError("Symbol at given position is not an operator!")
+
+        if isinstance(self._op_dict[op_symbol], list):
+            return self.resolve_overloads(expression, position)
+        else:
+            return self._op_dict[op_symbol]
 
 
 class CalculationError(Exception):
@@ -336,20 +379,39 @@ class Negation(UnaryOperator):
 
 class Minus(UnaryOperator):
     """
-    The unary operator for flipping a numbers sign.
+    The unary operator for flipping a number's sign (lower priority).
 
-    Symbol: '-_'
+    Symbol: '-'
 
     In an expression: -x
     """
 
     def __init__(self):
-        self._symbol = "-_"
+        self._symbol = "-"
+        self._priority = 4
+        self._operand_pos = UnaryOperator.OperandPos.AFTER
+
+    def operate(self, num: float) -> float:
+        return -num
+
+
+class NegativeSign(UnaryOperator):
+    """
+    The unary operator for flipping a number's sign.
+
+    Symbol: '-'
+
+    In an expression: -x
+    """
+
+    def __init__(self):
+        self._symbol = "-"
         self._priority = 10
         self._operand_pos = UnaryOperator.OperandPos.AFTER
 
     def operate(self, num: float) -> float:
         return -num
+
 
 class Factorial(UnaryOperator):
     """
