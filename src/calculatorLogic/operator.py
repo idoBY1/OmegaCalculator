@@ -2,9 +2,11 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, List, Any
 
-from src.calculatorLogic.calc_errors import CalculationError
+from src.calculatorLogic import calc_utils
+from src.calculatorLogic.calc_errors import CalculationError, FormattingError
 
-HIGHEST_OPERATOR_PRIORITY = 999 # All operators should have equal or lower priority from this value
+HIGHEST_OPERATOR_PRIORITY = 999  # All operators should have equal or lower priority from this value
+
 
 class Operator(ABC):
     """
@@ -63,6 +65,17 @@ class IDefinedOperators(ABC):
         """
         pass
 
+    @abstractmethod
+    def is_operator(self, expression: List[str], position: int) -> bool:
+        """
+        Returns ``True`` if the symbol at the given position is an operator and ``False`` otherwise.
+        :param expression: The expression of string symbols.
+        :param position: The index of the symbol at the list representing the expression.
+        :return: A boolean value.
+        """
+        pass
+
+    @abstractmethod
     def get_operator(self, expression: List[str], position: int) -> Operator:
         """
         Returns the operator at that position of the expression.
@@ -108,10 +121,10 @@ class BaseDefinedOperators(IDefinedOperators, ABC):
         intended to be used by subclasses of BaseDefinedOperators.
         :param operator: The operator to add to the dictionary
         """
-        if operator.get_symbol() in self._op_dict.keys(): # if overloaded operator, add to a list
-            if not isinstance(self._op_dict[operator.get_symbol()], list): # if list still does not exist, create it
+        if operator.get_symbol() in self._op_dict.keys():  # if overloaded operator, add to a list
+            if not isinstance(self._op_dict[operator.get_symbol()], list):  # if list still does not exist, create it
                 temp = self._op_dict[operator.get_symbol()]
-                self._op_dict[operator.get_symbol()] = [ temp ]
+                self._op_dict[operator.get_symbol()] = [temp]
 
             self._op_dict[operator.get_symbol()].append(operator)
         else:
@@ -126,6 +139,9 @@ class BaseDefinedOperators(IDefinedOperators, ABC):
         """
         return next((op for op in self._op_dict[op_symbol] if isinstance(op, op_type)),
                     self._op_dict[op_symbol][0])
+
+    def is_operator(self, expression: List[str], position: int) -> bool:
+        return expression[position] in self._op_dict.keys()
 
     def get_operator(self, expression: List[str], position: int) -> Operator:
         op_symbol = expression[position]
@@ -171,6 +187,31 @@ class UnaryOperator(Operator):
         """
         pass
 
+    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+        """
+        Checks if the given position is legal for this operator. raises an exception if the position
+        is illegal for the operator.
+        :param expression: The expression as string list before formatting.
+        :param position: The position in the expression.
+        :param defined_ops: The object containing the defined operators.
+        :raises FormattingError: If the position is illegal
+        """
+        if self._operand_pos == UnaryOperator.OperandPos.BEFORE:
+            if position < 1:
+                raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
+
+            if defined_ops.is_operator(expression, position - 1):
+                if isinstance(defined_ops.get_operator(expression, position - 1), ContainerOperator):
+                    raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
+                else:
+                    raise FormattingError(f"Error: '{self._symbol}' cannot come after an operator", position)
+        else:
+            if not position < len(expression) - 1:
+                raise FormattingError(f"Error: Missing a value after '{self._symbol}'")
+
+            if expression[position + 1] in defined_ops.get_end_symbols():
+                raise FormattingError(f"Error: Missing a value after '{self._symbol}'", position)
+
 
 class BinaryOperator(Operator):
     """
@@ -189,6 +230,31 @@ class BinaryOperator(Operator):
         :raises CalculationError: If the operation failed because of its calculation
         """
         pass
+
+    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+        """
+        Checks if the given position is legal for this operator. raises an exception if the position
+        is illegal for the operator.
+        :param expression: The expression as string list before formatting.
+        :param position: The position in the expression.
+        :param defined_ops: The object containing the defined operators.
+        :raises FormattingError: If the position is illegal
+        """
+        if position < 1:
+            raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
+
+        if defined_ops.is_operator(expression, position - 1):
+            if isinstance(defined_ops.get_operator(expression, position - 1), ContainerOperator):
+                raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
+            else:
+                raise FormattingError(f"Error: '{self._symbol}' cannot come after an operator", position)
+
+        if not position < len(expression) - 1:
+            raise FormattingError(f"Error: Missing a value after '{self._symbol}'")
+
+        if expression[position + 1] in defined_ops.get_end_symbols():
+            raise FormattingError(f"Error: Missing a value after '{self._symbol}'", position)
+
 
 class ContainerOperator(Operator):
     """
@@ -390,6 +456,18 @@ class Negation(UnaryOperator):
 
     def operate(self, num: float) -> float:
         return -num
+
+    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+        super().check_position(expression, position, defined_ops)
+
+        for i in range(position + 1, len(expression)):
+            if calc_utils.is_float_str(expression[i]):
+                return
+            elif not expression[i] == '-':
+                raise FormattingError(f"Error: '{self._symbol}' cannot come before '{expression[i]}'", i)
+
+        raise FormattingError(f"Error: Missing a value after '{self._symbol}'", position)
+
 
 class Minus(UnaryOperator):
     """

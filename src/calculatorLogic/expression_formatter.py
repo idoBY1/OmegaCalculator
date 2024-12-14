@@ -153,25 +153,11 @@ class InfixToPostfixFormatter(IFormatter):
             elif symbol in self._defined_ops.get_symbols():
                 curr_op = self._defined_ops.get_operator(expression, i)
 
-                is_unary_left = ((isinstance(curr_op, operator.UnaryOperator)
-                     and curr_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER))
+                if isinstance(curr_op, (operator.UnaryOperator, operator.BinaryOperator)):
+                    curr_op.check_position(expression, i, self._defined_ops)
 
-                # check if the position of the operator is legal
-                if (not isinstance(curr_op, operator.ContainerOperator)
-                        and not self.correct_regular_operator_pos(expression, i)
-                        and not is_unary_left):
-
-                    raise FormattingError(f"Error: The '{curr_op.get_symbol()}' operator should only come after an operand", i)
-
-                # handle a mathematical exception: negation must come before a *number* and not any expression
-                if isinstance(curr_op, operator.Negation) and (len(expression) <= i + 1 or
-                                                               not (expression[i + 1].isdigit() or expression[i + 1] == '-')):
-                    raise FormattingError("Error: Negation ({}) should only come before a number! (came before '{}')".format(
-                        curr_op.get_symbol(),
-                        "end-of-expression" if len(expression) <= i + 1
-                        else self._defined_ops.get_operator(expression, i + 1).get_symbol()), i)
-
-                if is_unary_left:
+                if ((isinstance(curr_op, operator.UnaryOperator) # check if unary left
+                     and curr_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER)):
                     left_operators.push(curr_op)
                 else:
                     # The last condition ensures that operators that come after containers will
@@ -203,6 +189,12 @@ class InfixToPostfixFormatter(IFormatter):
             FormattingError(f"Error: Invalid expression, some operators without operands")
 
         while not self._op_stack.is_empty():
-            postfix_expression.append(self._op_stack.pop())
+            curr_op = self._op_stack.pop()
+
+            if isinstance(curr_op, operator.ContainerOperator):
+                raise FormattingError(f"Error: Unclosed container '{curr_op.get_symbol()}', "
+                                      f"missing '{curr_op.get_end_symbol()}'")
+
+            postfix_expression.append(curr_op)
 
         return postfix_expression
