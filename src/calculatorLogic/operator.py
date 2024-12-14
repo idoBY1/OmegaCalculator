@@ -201,7 +201,11 @@ class UnaryOperator(Operator):
                 raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
 
             if defined_ops.is_operator(expression, position - 1):
-                if isinstance(defined_ops.get_operator(expression, position - 1), ContainerOperator):
+                prev_op = defined_ops.get_operator(expression, position - 1)
+
+                if isinstance(prev_op, UnaryOperator) and prev_op.get_operand_pos() == UnaryOperator.OperandPos.BEFORE:
+                    return
+                elif isinstance(prev_op, ContainerOperator):
                     raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
                 else:
                     raise FormattingError(f"Error: '{self._symbol}' cannot come after an operator", position)
@@ -244,7 +248,11 @@ class BinaryOperator(Operator):
             raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
 
         if defined_ops.is_operator(expression, position - 1):
-            if isinstance(defined_ops.get_operator(expression, position - 1), ContainerOperator):
+            prev_op = defined_ops.get_operator(expression, position - 1)
+
+            if isinstance(prev_op, UnaryOperator) and prev_op.get_operand_pos() == UnaryOperator.OperandPos.BEFORE:
+                return
+            elif isinstance(prev_op, ContainerOperator):
                 raise FormattingError(f"Error: Missing a value before '{self._symbol}'", position)
             else:
                 raise FormattingError(f"Error: '{self._symbol}' cannot come after an operator", position)
