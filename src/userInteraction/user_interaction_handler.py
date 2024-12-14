@@ -22,7 +22,7 @@ class IUserInteractionHandler(ABC):
         pass
 
     @abstractmethod
-    def display(self, msg: str, end: str="\n") -> None:
+    def display(self, msg: str, end: str = "\n") -> None:
         """
         Display a message to the user.
         :param msg: The message to display.
@@ -56,7 +56,7 @@ class ConsoleInteractionHandler(IUserInteractionHandler):
         self._output_handler.output_str(input_msg)
         return self._input_handler.get_input_str()
 
-    def display(self, msg: str, end: str="\n") -> None:
+    def display(self, msg: str, end: str = "\n") -> None:
         self._output_handler.output_str(msg + end)
 
     def get_input_or_exit(self, exit_input: str, input_msg: str = "") -> Tuple[bool, str]:

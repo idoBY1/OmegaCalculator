@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Tuple
+from typing import List, Any
 
+import src.calculatorLogic.defined_operators
 from src.calculatorLogic import stack, operator
 from src.calculatorLogic.calc_errors import SolvingError
-from src.calculatorLogic.operator import Operator, UnaryOperator, BinaryOperator, ContainerOperator
 
 ROUNDING_DIGITS = 12
+
 
 class ISolver(ABC):
     """
@@ -35,7 +36,7 @@ class PostfixSolver(ISolver):
         for symbol in formatted_expression:
             if isinstance(symbol, float):
                 operand_stack.push(symbol)
-            elif isinstance(symbol, operator.Operator):
+            elif isinstance(symbol, src.calculatorLogic.defined_operators.Operator):
                 if isinstance(symbol, operator.BinaryOperator):
                     try:
                         # reverse order because of stack (LIFO)
@@ -65,7 +66,8 @@ class PostfixSolver(ISolver):
                 raise SolvingError(f"Error: Does not recognise {str(symbol)}")
 
         if len(operand_stack) > 1:
-            raise SolvingError(f"Error: Too many operands! (each operand should be tied to the expression by some operator)")
+            raise SolvingError(
+                f"Error: Too many operands! (each operand should be tied to the expression by some operator)")
 
         if operand_stack.is_empty():
             raise SolvingError(f"Error: Empty expression!")

@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Any
 
-from src.calculatorLogic import stack, operator, calc_utils
+from src.calculatorLogic import stack, operator, calc_utils, defined_operators
 from src.calculatorLogic.calc_errors import FormattingError
 from src.calculatorLogic.calc_utils import organize_whitespace
-from src.calculatorLogic.operator import Operator, UnaryOperator, BinaryOperator, ContainerOperator
 
 
 class IFormatter(ABC):
@@ -38,8 +37,8 @@ class InfixToPostfixFormatter(IFormatter):
     The resulting expression should be solvable by PostfixSolver.
     """
 
-    def __init__(self, defined_operators: operator.IDefinedOperators):
-        self._defined_ops = defined_operators
+    def __init__(self, defined_ops: defined_operators.IDefinedOperators):
+        self._defined_ops = defined_ops
 
         self._op_stack = stack.ListStack()
 
@@ -47,7 +46,7 @@ class InfixToPostfixFormatter(IFormatter):
         symbol_list = []
         temp_symbol = ""
 
-        expression = organize_whitespace(expression) # delete repeats of spaces
+        expression = organize_whitespace(expression)  # delete repeats of spaces
 
         closing_symbols = self._defined_ops.get_end_symbols()
 
@@ -80,20 +79,6 @@ class InfixToPostfixFormatter(IFormatter):
 
         return symbol_list
 
-    # Helper function
-    def correct_regular_operator_pos(self, expression: List[str], i: int):
-        # can be a binary operator only if not on first symbol and only
-        # if the last symbol is not also an operator (except for unary operators that come after numbers)
-
-        return (0 < i  # not the first in the expression
-                and ((not expression[i - 1] in self._defined_ops.get_symbols())
-                     or (isinstance(self._defined_ops.get_operators_dict()[expression[i - 1]], # last symbol wasn't an operator
-                                    operator.UnaryOperator)
-                         and self._defined_ops.get_operators_dict()[expression[i - 1]].get_operand_pos() # check for unary operator exception
-                         == operator.UnaryOperator.OperandPos.BEFORE)
-                     )
-                )
-
     def format_expression(self, expression: List[str]) -> List[Any]:
         self._op_stack.empty()
         postfix_expression = []
@@ -101,7 +86,7 @@ class InfixToPostfixFormatter(IFormatter):
         # A dictionary storing currently opened container operators waiting to be closed.
         # Used for checking if a char is a closing char of a container.
         # This dictionary also counts the number of currently open containers of this type
-        opened_containers: Dict[ContainerOperator, int] = {}
+        opened_containers: Dict[operator.ContainerOperator, int] = {}
 
         left_operators = stack.ListStack()
 
@@ -116,7 +101,7 @@ class InfixToPostfixFormatter(IFormatter):
             elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if ch is a closing symbol
                 while not isinstance(self._op_stack.top(), operator.ContainerOperator):  # if not reached opening symbol
                     if (left_operators.top().get_priority() >= self._op_stack.top().get_priority()
-                           and not isinstance(left_operators.top(), operator.ContainerOperator)):
+                            and not isinstance(left_operators.top(), operator.ContainerOperator)):
                         postfix_expression.append(left_operators.pop())
 
                     postfix_expression.append(self._op_stack.pop())
@@ -148,8 +133,8 @@ class InfixToPostfixFormatter(IFormatter):
                          or curr_op.get_priority() > self._op_stack.top().get_priority()
                          or isinstance(self._op_stack.top(), operator.ContainerOperator))
                             and (left_operators.is_empty()
-                                or curr_op.get_priority() > left_operators.top().get_priority()
-                                or isinstance(left_operators.top(), operator.ContainerOperator))):
+                                 or curr_op.get_priority() > left_operators.top().get_priority()
+                                 or isinstance(left_operators.top(), operator.ContainerOperator))):
                         self._op_stack.push(curr_op)
                     else:
                         while ((not self._op_stack.is_empty())
@@ -164,7 +149,7 @@ class InfixToPostfixFormatter(IFormatter):
 
                         while ((not left_operators.is_empty())
                                and left_operators.top().get_priority() >= curr_op.get_priority()
-                                    and not isinstance(left_operators.top(), operator.ContainerOperator)):
+                               and not isinstance(left_operators.top(), operator.ContainerOperator)):
                             postfix_expression.append(left_operators.pop())
 
                         self._op_stack.push(curr_op)

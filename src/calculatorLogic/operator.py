@@ -1,158 +1,12 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from enum import Enum
-from typing import Dict, List, Any
+from typing import List
 
-from src.calculatorLogic import calc_utils
+from src.calculatorLogic import calc_utils, defined_operators
 from src.calculatorLogic.calc_errors import CalculationError, FormattingError
+from src.calculatorLogic.defined_operators import Operator
 
 HIGHEST_OPERATOR_PRIORITY = 999  # All operators should have equal or lower priority from this value
-
-
-class Operator(ABC):
-    """
-    An abstract operator.
-    """
-    _priority: float
-    _symbol: str
-
-    def get_priority(self) -> float:
-        """
-        Get the priority of the operator in the order of operations.
-        :return: The number representing the priority of the operation (higher number
-            indicates higher priority).
-        """
-        return self._priority
-
-    def get_symbol(self) -> str:
-        """
-        Get the symbol representing the operation in a math expression.
-        :return: The symbol as a string
-        """
-        return self._symbol
-
-    def __str__(self) -> str:
-        return self._symbol
-
-
-class IDefinedOperators(ABC):
-    """
-    A class that implements this interface will provide the operators for the calculator.
-    """
-
-    @abstractmethod
-    def get_operators_dict(self) -> Dict[str, Any]:
-        """
-        Get a dictionary of all the defined operators. The keys of the dictionary are
-        the symbols of the Operators stored as the values. Sometimes a list will be stored as
-        the value of a key and when this happens, resolve_overloads() function should be called.
-        :return: The dictionary containing the pairs of strings and Operators
-        """
-        pass
-
-    @abstractmethod
-    def get_symbols(self):
-        """
-        Get all the symbols of the operators
-        :return: A collection containing the symbols of all the operators.
-        """
-        pass
-
-    @abstractmethod
-    def get_end_symbols(self):
-        """
-        Get all the end symbols of the ContainerOperators.
-        :return: A collection containing the end symbols of the operators
-        """
-        pass
-
-    @abstractmethod
-    def is_operator(self, expression: List[str], position: int) -> bool:
-        """
-        Returns ``True`` if the symbol at the given position is an operator and ``False`` otherwise.
-        :param expression: The expression of string symbols.
-        :param position: The index of the symbol at the list representing the expression.
-        :return: A boolean value.
-        """
-        pass
-
-    @abstractmethod
-    def get_operator(self, expression: List[str], position: int) -> Operator:
-        """
-        Returns the operator at that position of the expression.
-        :param expression: The expression of string symbols.
-        :param position: The index of the operator at the list representing the expression.
-        :return: The correct operator for this position.
-        :raises ValueError: If the item at the given position is not an operator
-        """
-        pass
-
-    @abstractmethod
-    def resolve_overloads(self, expression: List[str], position: int) -> Operator:
-        """
-        Given a position with an overloaded operator, this function decides and returns the correct operator at this
-        position in the expression. This function resolves all overloaded operators at this DefinedOperators.
-        (ContainerOperators should not be overloaded!!!)
-        :param expression: The expression of string symbols.
-        :param position: The index of the overloaded operator at the list representing the expression.
-        :return: The correct operator for this position.
-        """
-        pass
-
-
-class BaseDefinedOperators(IDefinedOperators, ABC):
-    """
-    Subclasses of this class define the operators for the calculator. All the operations that can be performed by
-    the calculator are defined in an instance of a subclass of this class.
-    """
-    _op_dict: Dict[str, Any] = {}
-
-    def get_operators_dict(self) -> Dict[str, Any]:
-        return self._op_dict
-
-    def get_symbols(self):
-        return self._op_dict.keys()
-
-    def get_end_symbols(self):
-        return [op.get_end_symbol() for op in self._op_dict.values() if isinstance(op, ContainerOperator)]
-
-    def _add_op(self, operator: Operator) -> None:
-        """
-        Assign a new operator to this object's dictionary. This method is
-        intended to be used by subclasses of BaseDefinedOperators.
-        :param operator: The operator to add to the dictionary
-        """
-        if operator.get_symbol() in self._op_dict.keys():  # if overloaded operator, add to a list
-            if not isinstance(self._op_dict[operator.get_symbol()], list):  # if list still does not exist, create it
-                temp = self._op_dict[operator.get_symbol()]
-                self._op_dict[operator.get_symbol()] = [temp]
-
-            self._op_dict[operator.get_symbol()].append(operator)
-        else:
-            self._op_dict[operator.get_symbol()] = operator
-
-    def _get_overloaded_by_class(self, op_symbol: str, op_type: type) -> Operator:
-        """
-        Get the desired overloaded operator from the dict.
-        :param op_symbol: The key of the operator in the dictionary.
-        :param op_type: The type of the operator to get.
-        :return: The desired operator from this entry in the dict.
-        """
-        return next((op for op in self._op_dict[op_symbol] if isinstance(op, op_type)),
-                    self._op_dict[op_symbol][0])
-
-    def is_operator(self, expression: List[str], position: int) -> bool:
-        return expression[position] in self._op_dict.keys()
-
-    def get_operator(self, expression: List[str], position: int) -> Operator:
-        op_symbol = expression[position]
-
-        if not op_symbol in self._op_dict.keys():
-            raise ValueError("Symbol at given position is not an operator!")
-
-        if isinstance(self._op_dict[op_symbol], list):
-            return self.resolve_overloads(expression, position)
-        else:
-            return self._op_dict[op_symbol]
 
 
 # Subclasses of Operator
@@ -187,7 +41,8 @@ class UnaryOperator(Operator):
         """
         pass
 
-    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+    def check_position(self, expression: List[str], position: int,
+                       defined_ops: defined_operators.IDefinedOperators) -> None:
         """
         Checks if the given position is legal for this operator. raises an exception if the position
         is illegal for the operator.
@@ -235,7 +90,8 @@ class BinaryOperator(Operator):
         """
         pass
 
-    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+    def check_position(self, expression: List[str], position: int,
+                       defined_ops: defined_operators.IDefinedOperators) -> None:
         """
         Checks if the given position is legal for this operator. raises an exception if the position
         is illegal for the operator.
@@ -465,7 +321,8 @@ class Negation(UnaryOperator):
     def operate(self, num: float) -> float:
         return -num
 
-    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+    def check_position(self, expression: List[str], position: int,
+                       defined_ops: defined_operators.IDefinedOperators) -> None:
         super().check_position(expression, position, defined_ops)
 
         for i in range(position + 1, len(expression)):
@@ -494,14 +351,15 @@ class Minus(UnaryOperator):
     def operate(self, num: float) -> float:
         return -num
 
-    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+    def check_position(self, expression: List[str], position: int,
+                       defined_ops: defined_operators.IDefinedOperators) -> None:
         super().check_position(expression, position, defined_ops)
 
         for i in range(position + 1, len(expression)):
             if (calc_utils.is_float_str(expression[i])
                     or (defined_ops.is_operator(expression, i)
                         and isinstance(defined_ops.get_operator(expression, i), ContainerOperator))):
-                return # only if it has a number or a container to its right
+                return  # only if it has a number or a container to its right
             elif not expression[i] == '-':
                 raise FormattingError(f"Error: '{self._symbol}' cannot come before '{expression[i]}'", i)
 
@@ -528,14 +386,15 @@ class NegativeSign(UnaryOperator):
     def operate(self, num: float) -> float:
         return -num
 
-    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+    def check_position(self, expression: List[str], position: int,
+                       defined_ops: defined_operators.IDefinedOperators) -> None:
         super().check_position(expression, position, defined_ops)
 
         for i in range(position + 1, len(expression)):
             if (calc_utils.is_float_str(expression[i])
                     or (defined_ops.is_operator(expression, i)
                         and isinstance(defined_ops.get_operator(expression, i), ContainerOperator))):
-                return # only if it has a number or a container to its right
+                return  # only if it has a number or a container to its right
             elif not expression[i] == '-':
                 raise FormattingError(f"Error: '{self._symbol}' cannot come before '{expression[i]}'", i)
 
@@ -600,6 +459,7 @@ class SumDigits(UnaryOperator):
                 digits_sum += float(str_digit)
 
         return digits_sum
+
 
 class Brackets(ContainerOperator):
     """

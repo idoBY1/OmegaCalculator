@@ -1,9 +1,7 @@
-
 class CalculationError(Exception):
     """
     Exception raised for errors occurring mid-calculation of an expression.
     """
-
 
     def __init__(self, message):
         self.message = message
