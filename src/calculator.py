@@ -64,8 +64,8 @@ class Calculator:
         self.defined_operators = OmegaDefinedOperators()
 
         self.user_interaction_handler = user_interaction_handler.ConsoleInteractionHandler()
-        self.formatter = expression_formatter.InfixToPostfixFormatter(self.defined_operators.get_operators_dict())
-        self.solver = solver.PostfixSolver(self.defined_operators.get_operators_dict())
+        self.formatter = expression_formatter.InfixToPostfixFormatter(self.defined_operators)
+        self.solver = solver.PostfixSolver()
 
     def run(self):
         """
@@ -74,14 +74,14 @@ class Calculator:
         self.user_interaction_handler.display(f"Enter expressions to evaluate "
                                               f"(enter '{EXIT_INPUT}' to exit the program): ")
 
-        continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT)
+        continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT, ">>> ")
 
         while continue_running:
             symbol_list = self.formatter.extract_symbols(user_input)
-            # print(symbol_list)
+            print(symbol_list)
 
             formatted_expression = self.formatter.format_expression(symbol_list)
-            # print([str(item) for item in formatted_expression])
+            print([str(item) for item in formatted_expression])
 
             # The format_expression function returns [] when an error occurred
             if not (formatted_expression == []):
@@ -91,6 +91,6 @@ class Calculator:
                     print(f"= {result}")
 
             # get next input from the user
-            continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT)
+            continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT, ">>> ")
 
         self.user_interaction_handler.display("Exiting program...")

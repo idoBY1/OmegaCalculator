@@ -28,9 +28,6 @@ class PostfixSolver(ISolver):
     Class for solving mathematical expressions in postfix notation.
     """
 
-    def __init__(self, operators_dictionary: Dict[str, Operator]):
-        self._op_dict = operators_dictionary
-
     def solve(self, formatted_expression: List[Any]) -> Tuple[bool, float]:
         operand_stack = stack.ListStack()
 

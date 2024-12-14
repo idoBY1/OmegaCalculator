@@ -45,6 +45,22 @@ class IDefinedOperators(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_symbols(self):
+        """
+        Get all the symbols of the operators
+        :return: A collection containing the symbols of all the operators.
+        """
+        pass
+
+    @abstractmethod
+    def get_end_symbols(self):
+        """
+        Get all the end symbols of the ContainerOperators.
+        :return: A collection containing the end symbols of the operators
+        """
+        pass
+
     def get_operator(self, expression: List[str], position: int) -> Operator:
         """
         Returns the operator at that position of the expression.
@@ -60,6 +76,7 @@ class IDefinedOperators(ABC):
         """
         Given a position with an overloaded operator, this function decides and returns the correct operator at this
         position in the expression. This function resolves all overloaded operators at this DefinedOperators.
+        (ContainerOperators should not be overloaded!!!)
         :param expression: The expression of string symbols.
         :param position: The index of the overloaded operator at the list representing the expression.
         :return: The correct operator for this position.
@@ -70,12 +87,18 @@ class IDefinedOperators(ABC):
 class BaseDefinedOperators(IDefinedOperators, ABC):
     """
     Subclasses of this class define the operators for the calculator. All the operations that can be performed by
-    the calculator are defined in the dictionary provided by an instance of a subclass of this class.
+    the calculator are defined in an instance of a subclass of this class.
     """
     _op_dict: Dict[str, Any] = {}
 
     def get_operators_dict(self) -> Dict[str, Any]:
         return self._op_dict
+
+    def get_symbols(self):
+        return self._op_dict.keys()
+
+    def get_end_symbols(self):
+        return [op.get_end_symbol() for op in self._op_dict.values() if isinstance(op, ContainerOperator)]
 
     def _add_op(self, operator: Operator) -> None:
         """
@@ -394,6 +417,9 @@ class Minus(UnaryOperator):
     def operate(self, num: float) -> float:
         return -num
 
+    def __str__(self) -> str:
+        return self._symbol + " (unary minus)"
+
 
 class NegativeSign(UnaryOperator):
     """
@@ -411,6 +437,9 @@ class NegativeSign(UnaryOperator):
 
     def operate(self, num: float) -> float:
         return -num
+
+    def __str__(self) -> str:
+        return self._symbol + " (sign)"
 
 
 class Factorial(UnaryOperator):
