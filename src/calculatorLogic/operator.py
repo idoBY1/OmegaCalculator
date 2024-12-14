@@ -494,6 +494,19 @@ class Minus(UnaryOperator):
     def operate(self, num: float) -> float:
         return -num
 
+    def check_position(self, expression: List[str], position: int, defined_ops: IDefinedOperators) -> None:
+        super().check_position(expression, position, defined_ops)
+
+        for i in range(position + 1, len(expression)):
+            if (calc_utils.is_float_str(expression[i])
+                    or (defined_ops.is_operator(expression, i)
+                        and isinstance(defined_ops.get_operator(expression, i), ContainerOperator))):
+                return # only if it has a number or a container to its right
+            elif not expression[i] == '-':
+                raise FormattingError(f"Error: '{self._symbol}' cannot come before '{expression[i]}'", i)
+
+        raise FormattingError(f"Error: Missing a value after '{self._symbol}'", position)
+
     def __str__(self) -> str:
         return self._symbol + " (unary minus)"
 

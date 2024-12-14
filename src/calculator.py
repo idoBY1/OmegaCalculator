@@ -45,7 +45,8 @@ class OmegaDefinedOperators(operator.BaseDefinedOperators):
                     # previous symbol was not an operator
                     return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
 
-                if isinstance(prev_op, operator.ContainerOperator): # if start of an independent expression
+                if (isinstance(prev_op, operator.ContainerOperator) # if start of an independent expression
+                        or isinstance(prev_op, operator.Minus)):  # or if the previous operator is unary minus
                     return self._get_overloaded_by_class(op_symbol, operator.Minus)
                 elif (isinstance(prev_op, operator.BinaryOperator) # if after an operator that requires a value
                       or (isinstance(prev_op, operator.UnaryOperator)
@@ -89,7 +90,7 @@ class Calculator:
             else:
                 try:
                     formatted_expression = self.formatter.format_expression(symbol_list)
-                    # print([str(item) for item in formatted_expression])
+                    print([str(item) for item in formatted_expression])
 
                     result = self.solver.solve(formatted_expression)
 

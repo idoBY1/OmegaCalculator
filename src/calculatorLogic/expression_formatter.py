@@ -94,23 +94,6 @@ class InfixToPostfixFormatter(IFormatter):
                      )
                 )
 
-    # Helper function
-    def free_left_operators(self, left_operators: stack.IStack, postfix_expression: List[Any]):
-        while ((not left_operators.is_empty()) and
-               (not isinstance(left_operators.top(), operator.ContainerOperator))):
-            curr_op = left_operators.pop()
-
-            if (self._op_stack.is_empty()
-                    or curr_op.get_priority() > self._op_stack.top().get_priority()
-                    or isinstance(self._op_stack.top(), operator.ContainerOperator)):
-                self._op_stack.push(curr_op)
-            else:
-                while (
-                        not self._op_stack.is_empty()) and curr_op.get_priority() <= self._op_stack.top().get_priority():
-                    postfix_expression.append(self._op_stack.pop())
-
-                self._op_stack.push(curr_op)
-
     def format_expression(self, expression: List[str]) -> List[Any]:
         self._op_stack.empty()
         postfix_expression = []
@@ -120,9 +103,6 @@ class InfixToPostfixFormatter(IFormatter):
         # This dictionary also counts the number of currently open containers of this type
         opened_containers: Dict[ContainerOperator, int] = {}
 
-        # a list for saving the left operators and putting them after an expression
-        left_operators = stack.ListStack()
-
         for i in range(len(expression)):
             symbol = expression[i]
 
@@ -131,8 +111,6 @@ class InfixToPostfixFormatter(IFormatter):
                     postfix_expression.append(float(symbol))
                 except ValueError:
                     raise FormattingError(f"Error: Failed to cast '{symbol}' to a floating point value", i)
-
-                self.free_left_operators(left_operators, postfix_expression)
             elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if ch is a closing symbol
                 while not isinstance(self._op_stack.top(), operator.ContainerOperator):  # if not reached opening symbol
                     postfix_expression.append(self._op_stack.pop())
@@ -145,48 +123,33 @@ class InfixToPostfixFormatter(IFormatter):
 
                 if opened_containers[curr_op] == 0:
                     opened_containers.pop(curr_op)
-
-                if left_operators.pop() != curr_op:
-                    raise FormattingError("Error: Incorrect container or unary operator placement", i)
-
-                self.free_left_operators(left_operators, postfix_expression)
             elif symbol in self._defined_ops.get_symbols():
                 curr_op = self._defined_ops.get_operator(expression, i)
 
                 if isinstance(curr_op, (operator.UnaryOperator, operator.BinaryOperator)):
                     curr_op.check_position(expression, i, self._defined_ops)
 
-                if ((isinstance(curr_op, operator.UnaryOperator) # check if unary left
-                     and curr_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER)):
-                    left_operators.push(curr_op)
+                if (self._op_stack.is_empty()
+                        or curr_op.get_priority() > self._op_stack.top().get_priority()
+                        or isinstance(self._op_stack.top(), operator.ContainerOperator)
+                        or (isinstance(self._op_stack.top(), operator.UnaryOperator)
+                            and curr_op.get_priority() == self._op_stack.top().get_priority())):
+                    self._op_stack.push(curr_op)
                 else:
-                    # The last condition ensures that operators that come after containers will
-                    # always be pushed onto the stack
-                    if (self._op_stack.is_empty()
-                            or curr_op.get_priority() > self._op_stack.top().get_priority()
-                            or isinstance(self._op_stack.top(), operator.ContainerOperator)):
-                        self._op_stack.push(curr_op)
-                    else:
-                        while ((not self._op_stack.is_empty()) and not self._op_stack.top() in opened_containers.keys()
-                               and curr_op.get_priority() <= self._op_stack.top().get_priority()):
-                            postfix_expression.append(self._op_stack.pop())
+                    while ((not self._op_stack.is_empty()) and not self._op_stack.top() in opened_containers.keys()
+                           and curr_op.get_priority() <= self._op_stack.top().get_priority()):
+                        postfix_expression.append(self._op_stack.pop())
 
-                        self._op_stack.push(curr_op)
+                    self._op_stack.push(curr_op)
 
-                    # track opened containers
-                    if isinstance(curr_op, operator.ContainerOperator):
-                        if not curr_op in opened_containers.keys():
-                            opened_containers[curr_op] = 0
+                # track opened containers
+                if isinstance(curr_op, operator.ContainerOperator):
+                    if not curr_op in opened_containers.keys():
+                        opened_containers[curr_op] = 0
 
-                        opened_containers[curr_op] += 1
-
-                        # a left operator should be freed only after a container that comes after it is closed
-                        left_operators.push(curr_op)
+                    opened_containers[curr_op] += 1
             else:
                 raise FormattingError(f"Error: Invalid expression, did not recognize symbol '{symbol}'", i)
-
-        if not left_operators.is_empty():
-            FormattingError(f"Error: Invalid expression, some operators without operands")
 
         while not self._op_stack.is_empty():
             curr_op = self._op_stack.pop()
