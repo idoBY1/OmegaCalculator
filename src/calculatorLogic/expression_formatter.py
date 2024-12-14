@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Any
 
 from src.calculatorLogic import stack, operator, calc_utils
+from src.calculatorLogic.calc_errors import FormattingError
 from src.calculatorLogic.calc_utils import organize_whitespace
 from src.calculatorLogic.operator import Operator, UnaryOperator, BinaryOperator, ContainerOperator
 
@@ -17,6 +18,7 @@ class IFormatter(ABC):
         Format the string expression to a readable form by a solver.
         :param expression: Expression as a string list
         :return: A formatted string list expression
+        :raises FormattingError: If an error occurred while formatting the expression.
         """
         pass
 
@@ -128,7 +130,7 @@ class InfixToPostfixFormatter(IFormatter):
                 try:
                     postfix_expression.append(float(symbol))
                 except ValueError:
-                    print(f"Error: Failed to cast '{symbol}' to a floating point value")
+                    raise FormattingError(f"Error: Failed to cast '{symbol}' to a floating point value", i)
 
                 self.free_left_operators(left_operators, postfix_expression)
             elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if ch is a closing symbol
@@ -145,8 +147,7 @@ class InfixToPostfixFormatter(IFormatter):
                     opened_containers.pop(curr_op)
 
                 if left_operators.pop() != curr_op:
-                    print("Error: Incorrect container or unary operator placement")
-                    return []
+                    raise FormattingError("Error: Incorrect container or unary operator placement", i)
 
                 self.free_left_operators(left_operators, postfix_expression)
             elif symbol in self._defined_ops.get_symbols():
@@ -160,18 +161,15 @@ class InfixToPostfixFormatter(IFormatter):
                         and not self.correct_regular_operator_pos(expression, i)
                         and not is_unary_left):
 
-                    print(f"Error: The '{curr_op.get_symbol()}' operator should only come after an operand")
-                    return []
+                    raise FormattingError(f"Error: The '{curr_op.get_symbol()}' operator should only come after an operand", i)
 
                 # handle a mathematical exception: negation must come before a *number* and not any expression
                 if isinstance(curr_op, operator.Negation) and (len(expression) <= i + 1 or
                                                                not (expression[i + 1].isdigit() or expression[i + 1] == '-')):
-                    print("Error: Negation ({}) should only come before a number! (came before '{}')".format(
+                    raise FormattingError("Error: Negation ({}) should only come before a number! (came before '{}')".format(
                         curr_op.get_symbol(),
                         "end-of-expression" if len(expression) <= i + 1
-                        else self._defined_ops.get_operator(expression, i + 1).get_symbol()))
-
-                    return []
+                        else self._defined_ops.get_operator(expression, i + 1).get_symbol()), i)
 
                 if is_unary_left:
                     left_operators.push(curr_op)
@@ -199,12 +197,10 @@ class InfixToPostfixFormatter(IFormatter):
                         # a left operator should be freed only after a container that comes after it is closed
                         left_operators.push(curr_op)
             else:
-                print(f"Error: Invalid expression, did not recognize symbol '{symbol}'")
-                return []
+                raise FormattingError(f"Error: Invalid expression, did not recognize symbol '{symbol}'", i)
 
         if not left_operators.is_empty():
-            print(f"Error: Invalid expression, some operators without operands")
-            return []
+            FormattingError(f"Error: Invalid expression, some operators without operands")
 
         while not self._op_stack.is_empty():
             postfix_expression.append(self._op_stack.pop())

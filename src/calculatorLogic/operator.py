@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, List, Any
 
+from src.calculatorLogic.calc_errors import CalculationError
+
 HIGHEST_OPERATOR_PRIORITY = 999 # All operators should have equal or lower priority from this value
 
 class Operator(ABC):
@@ -135,17 +137,6 @@ class BaseDefinedOperators(IDefinedOperators, ABC):
             return self.resolve_overloads(expression, position)
         else:
             return self._op_dict[op_symbol]
-
-
-class CalculationError(Exception):
-    """
-    Exception raised for errors occurring mid-calculation of an expression.
-    """
-
-
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
 
 
 # Subclasses of Operator

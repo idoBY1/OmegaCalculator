@@ -4,6 +4,7 @@ import src.calculatorLogic.expression_formatter as expression_formatter
 import src.calculatorLogic.solver as solver
 import src.userInteraction.user_interaction_handler as user_interaction_handler
 import src.calculatorLogic.operator as operator
+from src.calculatorLogic.calc_errors import FormattingError, CalculationError, SolvingError
 from src.calculatorLogic.operator import Operator
 
 EXIT_INPUT = "exit"
@@ -78,17 +79,35 @@ class Calculator:
 
         while continue_running:
             symbol_list = self.formatter.extract_symbols(user_input)
-            print(symbol_list)
+            # print(symbol_list)
 
-            formatted_expression = self.formatter.format_expression(symbol_list)
-            print([str(item) for item in formatted_expression])
+            try:
+                formatted_expression = self.formatter.format_expression(symbol_list)
+                # print([str(item) for item in formatted_expression])
 
-            # The format_expression function returns [] when an error occurred
-            if not (formatted_expression == []):
-                is_error_free, result = self.solver.solve(formatted_expression)
+                result = self.solver.solve(formatted_expression)
 
-                if is_error_free:
-                    print(f"= {result}")
+                self.user_interaction_handler.display(f"= {result}\n")
+            except FormattingError as e:
+                self.user_interaction_handler.display(e.message)
+
+                position_msg_prefix = "At position: "
+                self.user_interaction_handler.display(position_msg_prefix, "")
+
+                if e.position >= 0:
+                    self.user_interaction_handler.display("".join(symbol_list))
+
+                    for i in range(e.position):
+                        self.user_interaction_handler.display(" " * len(symbol_list[i]), "")
+                    self.user_interaction_handler.display(" " * len(position_msg_prefix), "")
+
+                    self.user_interaction_handler.display("^" * len(symbol_list[e.position]))
+            except CalculationError as e:
+                self.user_interaction_handler.display(e.message, end="\n\n")
+            except SolvingError as e:
+                self.user_interaction_handler.display(e.message, end="\n\n")
+            except Exception as e:
+                self.user_interaction_handler.display(str(e), end="\n\n")
 
             # get next input from the user
             continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT, ">>> ")
