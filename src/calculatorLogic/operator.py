@@ -12,10 +12,10 @@ class Operator(ABC):
     """
     An abstract operator.
     """
-    _priority: int
+    _priority: float
     _symbol: str
 
-    def get_priority(self) -> int:
+    def get_priority(self) -> float:
         """
         Get the priority of the operator in the order of operations.
         :return: The number representing the priority of the operation (higher number
@@ -391,7 +391,7 @@ class Modulo(BinaryOperator):
 
     def __init__(self):
         self._symbol = '%'
-        self._priority = 5
+        self._priority = 4
 
     def operate(self, num1: float, num2: float) -> float:
         return num1 % num2
@@ -408,7 +408,7 @@ class Max(BinaryOperator):
 
     def __init__(self):
         self._symbol = '$'
-        self._priority = 6
+        self._priority = 5
 
     def operate(self, num1: float, num2: float) -> float:
         return num1 if num1 > num2 else num2
@@ -425,7 +425,7 @@ class Min(BinaryOperator):
 
     def __init__(self):
         self._symbol = '&'
-        self._priority = 6
+        self._priority = 5
 
     def operate(self, num1: float, num2: float) -> float:
         return num1 if num1 < num2 else num2
@@ -442,7 +442,7 @@ class Average(BinaryOperator):
 
     def __init__(self):
         self._symbol = '@'
-        self._priority = 6
+        self._priority = 5
 
     def operate(self, num1: float, num2: float) -> float:
         return (num1 + num2) / 2.0
@@ -459,7 +459,7 @@ class Negation(UnaryOperator):
 
     def __init__(self):
         self._symbol = '~'
-        self._priority = 7
+        self._priority = 6
         self._operand_pos = UnaryOperator.OperandPos.AFTER
 
     def operate(self, num: float) -> float:
@@ -488,7 +488,7 @@ class Minus(UnaryOperator):
 
     def __init__(self):
         self._symbol = "-"
-        self._priority = 4
+        self._priority = 3.5
         self._operand_pos = UnaryOperator.OperandPos.AFTER
 
     def operate(self, num: float) -> float:
@@ -556,7 +556,7 @@ class Factorial(UnaryOperator):
 
     def __init__(self):
         self._symbol = '!'
-        self._priority = 7
+        self._priority = 6
         self._operand_pos = UnaryOperator.OperandPos.BEFORE
 
     def operate(self, num: float) -> float:
@@ -573,6 +573,33 @@ class Factorial(UnaryOperator):
 
         return res
 
+
+class SumDigits(UnaryOperator):
+    """
+    The unary operator for summing the digits of a number.
+
+    Symbol: '#'
+
+    In an expression: x#
+    """
+
+    def __init__(self):
+        self._symbol = '#'
+        self._priority = 6
+        self._operand_pos = UnaryOperator.OperandPos.BEFORE
+
+    def operate(self, num: float) -> float:
+        if num < 0:
+            raise CalculationError(f"Cannot calculate the sum of digits of a negative number ({num}# = ???)")
+
+        str_num = str(num)
+
+        digits_sum = 0
+        for str_digit in str_num:
+            if str_digit.isdigit():
+                digits_sum += float(str_digit)
+
+        return digits_sum
 
 class Brackets(ContainerOperator):
     """

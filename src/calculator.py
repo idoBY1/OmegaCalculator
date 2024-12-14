@@ -30,6 +30,7 @@ class OmegaDefinedOperators(operator.BaseDefinedOperators):
         self._add_op(operator.Brackets())
         self._add_op(operator.Minus())
         self._add_op(operator.NegativeSign())
+        self._add_op(operator.SumDigits())
 
     def resolve_overloads(self, expression: List[str], position: int) -> Operator:
         op_symbol = expression[position]
@@ -118,8 +119,8 @@ class Calculator:
                     self.user_interaction_handler.display(e.message, end="\n\n")
                 except SolvingError as e:
                     self.user_interaction_handler.display(e.message, end="\n\n")
-                except Exception as e:
-                    self.user_interaction_handler.display(str(e), end="\n\n")
+                # except Exception as e:
+                #     self.user_interaction_handler.display(str(e), end="\n\n")
 
             # get next input from the user
             continue_running, user_input = self.user_interaction_handler.get_input_or_exit(EXIT_INPUT, ">>> ")

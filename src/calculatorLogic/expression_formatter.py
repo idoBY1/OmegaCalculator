@@ -103,6 +103,8 @@ class InfixToPostfixFormatter(IFormatter):
         # This dictionary also counts the number of currently open containers of this type
         opened_containers: Dict[ContainerOperator, int] = {}
 
+        left_operators = stack.ListStack()
+
         for i in range(len(expression)):
             symbol = expression[i]
 
@@ -113,13 +115,21 @@ class InfixToPostfixFormatter(IFormatter):
                     raise FormattingError(f"Error: Failed to cast '{symbol}' to a floating point value", i)
             elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if ch is a closing symbol
                 while not isinstance(self._op_stack.top(), operator.ContainerOperator):  # if not reached opening symbol
+                    if (left_operators.top().get_priority() >= self._op_stack.top().get_priority()
+                           and not isinstance(left_operators.top(), operator.ContainerOperator)):
+                        postfix_expression.append(left_operators.pop())
+
                     postfix_expression.append(self._op_stack.pop())
+
+                while not isinstance(left_operators.top(), operator.ContainerOperator):
+                    postfix_expression.append(left_operators.pop())
 
                 curr_op = self._op_stack.pop()
 
                 postfix_expression.append(curr_op)  # add opening symbol to final expression
 
                 opened_containers[curr_op] -= 1  # reduce opened containers count
+                left_operators.pop()
 
                 if opened_containers[curr_op] == 0:
                     opened_containers.pop(curr_op)
@@ -129,35 +139,60 @@ class InfixToPostfixFormatter(IFormatter):
                 if isinstance(curr_op, (operator.UnaryOperator, operator.BinaryOperator)):
                     curr_op.check_position(expression, i, self._defined_ops)
 
-                if (self._op_stack.is_empty()
-                        or curr_op.get_priority() > self._op_stack.top().get_priority()
-                        or isinstance(self._op_stack.top(), operator.ContainerOperator)
-                        or (isinstance(self._op_stack.top(), operator.UnaryOperator)
-                            and curr_op.get_priority() == self._op_stack.top().get_priority())):
-                    self._op_stack.push(curr_op)
+                # if left unary operator, push to left_operators without performing any checks for now
+                if (isinstance(curr_op, operator.UnaryOperator)
+                        and curr_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER):
+                    left_operators.push(curr_op)
                 else:
-                    while ((not self._op_stack.is_empty()) and not self._op_stack.top() in opened_containers.keys()
-                           and curr_op.get_priority() <= self._op_stack.top().get_priority()):
-                        postfix_expression.append(self._op_stack.pop())
+                    if ((self._op_stack.is_empty()
+                         or curr_op.get_priority() > self._op_stack.top().get_priority()
+                         or isinstance(self._op_stack.top(), operator.ContainerOperator))
+                            and (left_operators.is_empty()
+                                or curr_op.get_priority() > left_operators.top().get_priority()
+                                or isinstance(left_operators.top(), operator.ContainerOperator))):
+                        self._op_stack.push(curr_op)
+                    else:
+                        while ((not self._op_stack.is_empty())
+                               and curr_op.get_priority() <= self._op_stack.top().get_priority()
+                               and not isinstance(self._op_stack.top(), operator.ContainerOperator)):
+                            if ((not left_operators.is_empty()) and left_operators.top().get_priority()
+                                    >= self._op_stack.top().get_priority()
+                                    and not isinstance(left_operators.top(), operator.ContainerOperator)):
+                                postfix_expression.append(left_operators.pop())
+                            else:
+                                postfix_expression.append(self._op_stack.pop())
 
-                    self._op_stack.push(curr_op)
+                        while ((not left_operators.is_empty())
+                               and left_operators.top().get_priority() >= curr_op.get_priority()
+                                    and not isinstance(left_operators.top(), operator.ContainerOperator)):
+                            postfix_expression.append(left_operators.pop())
 
-                # track opened containers
-                if isinstance(curr_op, operator.ContainerOperator):
-                    if not curr_op in opened_containers.keys():
-                        opened_containers[curr_op] = 0
+                        self._op_stack.push(curr_op)
 
-                    opened_containers[curr_op] += 1
+                    # track opened containers
+                    if isinstance(curr_op, operator.ContainerOperator):
+                        if not curr_op in opened_containers.keys():
+                            opened_containers[curr_op] = 0
+
+                        opened_containers[curr_op] += 1
+                        left_operators.push(curr_op)
             else:
                 raise FormattingError(f"Error: Invalid expression, did not recognize symbol '{symbol}'", i)
 
         while not self._op_stack.is_empty():
             curr_op = self._op_stack.pop()
 
+            while ((not left_operators.is_empty())
+                   and left_operators.top().get_priority() >= curr_op.get_priority()):
+                postfix_expression.append(left_operators.pop())
+
             if isinstance(curr_op, operator.ContainerOperator):
                 raise FormattingError(f"Error: Unclosed container '{curr_op.get_symbol()}', "
                                       f"missing '{curr_op.get_end_symbol()}'")
 
             postfix_expression.append(curr_op)
+
+        while not left_operators.is_empty():
+            postfix_expression.append(left_operators.pop())
 
         return postfix_expression
