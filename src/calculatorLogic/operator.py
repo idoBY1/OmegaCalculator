@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
+from math import inf
 from typing import List
 
 from src.calculatorLogic import calc_utils, defined_operators
@@ -8,6 +9,7 @@ from src.calculatorLogic.defined_operators import Operator
 
 HIGHEST_OPERATOR_PRIORITY = 999  # All operators should have equal or lower priority from this value
 
+MAX_ITER = 100000 # The max amount of full iterations allowed for the calculator to perform on a single operation
 
 # Subclasses of Operator
 class UnaryOperator(Operator):
@@ -427,6 +429,10 @@ class Factorial(UnaryOperator):
 
         res = 1.0
 
+        # if the amount of iterations is bigger than the max of allowed iterations, return inf
+        if round(num) + 1 > MAX_ITER:
+            return inf
+
         for i in range(1, round(num) + 1):
             res *= i
 
@@ -449,7 +455,10 @@ class SumDigits(UnaryOperator):
 
     def operate(self, num: float) -> float:
         if num < 0:
-            raise CalculationError(f"Cannot calculate the sum of digits of a negative number ({num}# = ???)")
+            raise CalculationError(f"Error: Cannot calculate the sum of digits of a negative number ({num}# = ???)")
+
+        if num == inf or 'e' in str(num).lower():
+            raise CalculationError(f"Cannot calculate the sum of digits of a number with an exponent ({num}# = ???)")
 
         str_num = str(num)
 

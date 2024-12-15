@@ -5,7 +5,7 @@ import src.calculatorLogic.defined_operators
 from src.calculatorLogic import stack, operator
 from src.calculatorLogic.calc_errors import SolvingError
 
-ROUNDING_DIGITS = 12
+ROUNDING_DIGITS = 16
 
 
 class ISolver(ABC):

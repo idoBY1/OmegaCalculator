@@ -39,7 +39,7 @@ class Calculator:
             else:
                 try:
                     formatted_expression = self.formatter.format_expression(symbol_list)
-                    print([str(item) for item in formatted_expression])
+                    # print([str(item) for item in formatted_expression])
 
                     result = self.solver.solve(formatted_expression)
 
