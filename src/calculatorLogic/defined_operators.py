@@ -178,8 +178,7 @@ class OmegaDefinedOperators(BaseDefinedOperators):
     def resolve_overloads(self, expression: List[str], position: int) -> Operator:
         op_symbol = expression[position]
 
-        match op_symbol:
-            case '-':
+        if op_symbol == '-':
                 if position <= 0: # if the first symbol, must be unary minus
                     return self._get_overloaded_by_class(op_symbol, operator.Minus)
 
@@ -198,7 +197,5 @@ class OmegaDefinedOperators(BaseDefinedOperators):
                     return self._get_overloaded_by_class(op_symbol, operator.NegativeSign)
                 else: # default case
                     return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
-            case _:
-                return self._op_dict[op_symbol]
-
-
+        else:
+            return self._op_dict[op_symbol]
