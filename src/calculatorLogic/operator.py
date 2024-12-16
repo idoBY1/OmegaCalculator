@@ -1,3 +1,4 @@
+import math
 from abc import abstractmethod
 from enum import Enum
 from math import inf
@@ -235,7 +236,13 @@ class Power(BinaryOperator):
         self._priority = 3
 
     def operate(self, num1: float, num2: float) -> float:
-        return num1 ** num2
+        try:
+            return math.pow(num1, num2)
+        except OverflowError:
+            if num1 > 0:
+                return inf
+            else:
+                return -inf
 
 
 class Modulo(BinaryOperator):
