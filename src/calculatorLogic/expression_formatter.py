@@ -54,19 +54,26 @@ class InfixToPostfixFormatter(IFormatter):
             ch = expression[i]
 
             if ch.isspace():
-                if temp_symbol != "":
+                if (temp_symbol != ""
+                        and not calc_utils.is_float_str(temp_symbol)): # make sure to only separate if not a number
                     symbol_list.append(temp_symbol)
                     temp_symbol = ""
             elif ((temp_symbol + ch) in self._defined_ops.get_symbols()) or ((temp_symbol + ch) in closing_symbols):
+                # if this temp_symbol creates with this char a defined operator
+
                 symbol_list.append(temp_symbol + ch)
                 temp_symbol = ""
             elif (ch in self._defined_ops.get_symbols()) or (ch in closing_symbols):
+                # if this char alone creates a defined operator
+
                 if temp_symbol != "":
                     symbol_list.append(temp_symbol)
                     temp_symbol = ""
 
                 symbol_list.append(ch)
             elif calc_utils.is_float_str(temp_symbol) and not calc_utils.is_float_str(temp_symbol + ch):
+                # if at the end of a valid number
+
                 symbol_list.append(temp_symbol)
                 temp_symbol = ""
 
@@ -124,7 +131,7 @@ class InfixToPostfixFormatter(IFormatter):
                 if isinstance(curr_op, (operator.UnaryOperator, operator.BinaryOperator)):
                     curr_op.check_position(expression, i, self._defined_ops)
 
-                # if left unary operator, push to left_operators without performing any checks for now
+                # if operator is a left unary operator, push to left_operators without performing any checks for now
                 if (isinstance(curr_op, operator.UnaryOperator)
                         and curr_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER):
                     left_operators.push(curr_op)
