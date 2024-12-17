@@ -12,11 +12,11 @@ class IFormatter(ABC):
     """
 
     @abstractmethod
-    def format_expression(self, expression: List[str]) -> List[str]:
+    def format_expression(self, expression: List[str]) -> List[Any]:
         """
         Format the string expression to a readable form by a solver.
         :param expression: Expression as a string list
-        :return: A formatted string list expression
+        :return: A formatted symbol list expression
         :raises FormattingError: If an error occurred while formatting the expression.
         """
         pass
