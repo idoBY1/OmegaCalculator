@@ -467,7 +467,7 @@ class SumDigits(UnaryOperator):
     In an expression: x#
     """
 
-    MAX_NUMBER_DIGITS = 14
+    MAX_NUMBER_DIGITS = 16
 
     def __init__(self):
         self._symbol = '#'
@@ -479,17 +479,16 @@ class SumDigits(UnaryOperator):
             raise CalculationError(f"Error: Cannot calculate the sum of digits of a negative number ({num}# = ???)")
 
         str_num = str(num)
+        str_num = str_num.lower().split("e", 1)[0] # remove exponent
 
         if len(str_num) > SumDigits.MAX_NUMBER_DIGITS:
-            raise CalculationError(f"Warning: Too many digits! trying to calculate the sum of a number with too many "
-                                   f"digits might yield unexpected results.")
+            raise CalculationError(f"Error: Cannot calculate sum of digits for a number with "
+                                   f"too many digits (loss of precision)")
 
         digits_sum = 0
         for str_digit in str_num:
             if str_digit.isdigit():
                 digits_sum += float(str_digit)
-            elif str_digit.lower() == 'e': # when dealing with numbers with exponents, leave the exponent out
-                break
 
         return digits_sum
 
