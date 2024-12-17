@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from math import inf
 from typing import List, Any
 
 import src.calculatorLogic.defined_operators
@@ -48,8 +49,6 @@ class PostfixSolver(ISolver):
                         operand_stack.push(result)
                     except IndexError:
                         raise SolvingError(f"Error: Not enough operands for {str(symbol)}")
-                    except operator.CalculationError as e:
-                        raise SolvingError(f"Error: {e.message}")
                 elif isinstance(symbol, (operator.UnaryOperator, operator.ContainerOperator)):
                     try:
                         num1 = operand_stack.pop()
@@ -58,8 +57,6 @@ class PostfixSolver(ISolver):
                         operand_stack.push(result)
                     except IndexError:
                         raise SolvingError(f"Error: Not enough operands for {str(symbol)}")
-                    except operator.CalculationError as e:
-                        raise SolvingError(f"Error: {e.message}")
                 else:
                     raise SolvingError(f"Error: Does not recognise the operator {str(symbol)}")
             else:
@@ -73,6 +70,11 @@ class PostfixSolver(ISolver):
             raise SolvingError(f"Error: Empty expression!")
 
         result = operand_stack.pop()
+
+        if result == inf:
+            raise SolvingError(f"Error: Result too large")
+        elif result == -inf:
+            raise SolvingError(f"Error: Result too small")
 
         # round the result number to avoid floating point operations errors
         return round(result, ROUNDING_DIGITS)

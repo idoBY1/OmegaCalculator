@@ -217,7 +217,7 @@ class Division(BinaryOperator):
 
     def operate(self, num1: float, num2: float) -> float:
         if num2 == 0:
-            raise CalculationError("Cannot divide by zero")
+            raise CalculationError("Error: Cannot divide by zero")
 
         return num1 / num2
 
@@ -236,6 +236,15 @@ class Power(BinaryOperator):
         self._priority = 3
 
     def operate(self, num1: float, num2: float) -> float:
+        if num1 < 0 and -1 < num2 < 1:
+            raise CalculationError(f"Error: Cannot raise a negative number to a fraction's power ({num1}^{num2} = ???)")
+
+        if num1 == 0 and num2 < 0:
+            raise CalculationError(f"Error: Cannot raise zero to a negative number's power ({num1}^{num2} = ???)")
+
+        if num1 == 0 and num2 == 0:
+            raise CalculationError(f"Error: Cannot raise zero to the power of zero ({num1}^{num2} = ???)")
+
         try:
             return math.pow(num1, num2)
         except OverflowError:
@@ -259,6 +268,9 @@ class Modulo(BinaryOperator):
         self._priority = 4
 
     def operate(self, num1: float, num2: float) -> float:
+        if num2 == 0:
+            raise CalculationError(f"Error: Cannot perform modulo by zero ({num1} % 0 = ???)")
+
         return num1 % num2
 
 
@@ -429,10 +441,10 @@ class Factorial(UnaryOperator):
 
     def operate(self, num: float) -> float:
         if num < 0:
-            raise CalculationError(f"Cannot calculate the factorial of a negative number ({num}! = ???)")
+            raise CalculationError(f"Error: Cannot calculate the factorial of a negative number ({num}! = ???)")
 
         if num % 1 != 0:
-            raise CalculationError(f"Can only calculate the factorial of a whole number ({num}! = ???)")
+            raise CalculationError(f"Error: Can only calculate the factorial of a whole number ({num}! = ???)")
 
         res = 1.0
 
@@ -455,6 +467,8 @@ class SumDigits(UnaryOperator):
     In an expression: x#
     """
 
+    MAX_NUMBER_DIGITS = 14
+
     def __init__(self):
         self._symbol = '#'
         self._priority = 6
@@ -464,15 +478,18 @@ class SumDigits(UnaryOperator):
         if num < 0:
             raise CalculationError(f"Error: Cannot calculate the sum of digits of a negative number ({num}# = ???)")
 
-        if num == inf or 'e' in str(num).lower():
-            raise CalculationError(f"Cannot calculate the sum of digits of a number with an exponent ({num}# = ???)")
-
         str_num = str(num)
+
+        if len(str_num) > SumDigits.MAX_NUMBER_DIGITS:
+            raise CalculationError(f"Warning: Too many digits! trying to calculate the sum of a number with too many "
+                                   f"digits might yield unexpected results.")
 
         digits_sum = 0
         for str_digit in str_num:
             if str_digit.isdigit():
                 digits_sum += float(str_digit)
+            elif str_digit.lower() == 'e': # when dealing with numbers with exponents, leave the exponent out
+                break
 
         return digits_sum
 

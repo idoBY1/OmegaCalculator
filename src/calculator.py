@@ -1,11 +1,11 @@
 import src.calculatorLogic.expression_formatter as expression_formatter
 import src.calculatorLogic.solver as solver
 import src.userInteraction.user_interaction_handler as user_interaction_handler
-from src.calculatorLogic import defined_operators
+from src.calculatorLogic import defined_operators, operator
 from src.calculatorLogic.calc_errors import FormattingError, CalculationError, SolvingError
 
-EXIT_INPUT = "exit"
-
+EXIT_INPUT = "quit"
+HELP_INPUT = "help"
 
 class Calculator:
     def __init__(self):
@@ -31,11 +31,17 @@ class Calculator:
             symbol_list = self.formatter.extract_symbols(user_input)
             print(symbol_list)
 
-            if len(symbol_list) > 0 and symbol_list[0] == "help":
+            if len(symbol_list) > 0 and symbol_list[0] == HELP_INPUT:
                 self.user_interaction_handler.display("Type a mathematical expression to get a solution. "
                                                       "The possible operations are: ")
 
-                self.user_interaction_handler.display(", ".join(self.defined_operators.get_symbols()), end="\n\n")
+                self.user_interaction_handler.display(", ".join(
+                    [s if not isinstance(op, operator.ContainerOperator) else s + op.get_end_symbol()
+                     for (s, op) in self.defined_operators.get_operators_dict().items()]), end="\n\n")
+
+                self.user_interaction_handler.display("Possible additional commands: \n"
+                                                      f"{HELP_INPUT} - show this information.\n"
+                                                      f"{EXIT_INPUT} - exit the program.\n")
             else:
                 try:
                     formatted_expression = self.formatter.format_expression(symbol_list)
