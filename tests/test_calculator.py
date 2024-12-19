@@ -97,6 +97,6 @@ class TestCalculator:
             ("8^-2#", CalculationError)
         ]
     )
-    def test_calculate_raises(self, expression: str, expected_exception: type[Exception]):
+    def test_calculate_raises(self, expression: str, expected_exception):
         with pytest.raises(expected_exception):
             test_calculator.calculate(expression)

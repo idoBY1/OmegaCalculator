@@ -77,6 +77,6 @@ class TestPostfixSolver:
             ([234.534, 3.7, ops['~']], calc_errors.SolvingError)
         ]
     )
-    def test_solve_raises(self, expression: List[Any], expected_exception: type[Exception]):
+    def test_solve_raises(self, expression: List[Any], expected_exception):
         with pytest.raises(expected_exception):
             postfix_solver.solve(expression)
