@@ -7,6 +7,7 @@ from src.calculatorLogic.calc_errors import FormattingError, CalculationError, S
 EXIT_INPUT = "quit"
 HELP_INPUT = "help"
 
+
 class Calculator:
     def __init__(self):
         """

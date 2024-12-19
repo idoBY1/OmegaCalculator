@@ -40,8 +40,8 @@ class InfixToPostfixFormatter(IFormatter):
     def __init__(self, defined_ops: defined_operators.IDefinedOperators):
         self._defined_ops = defined_ops
 
-        self._op_stack = stack.ListStack() # stack for storing operators before inserting them in an expression
-        self._left_operators = stack.ListStack() # stack for storing the left-operators (they behave a bit differently)
+        self._op_stack = stack.ListStack()  # stack for storing operators before inserting them in an expression
+        self._left_operators = stack.ListStack()  # stack for storing the left-operators (they behave a bit differently)
 
     def extract_symbols(self, expression: str) -> List[str]:
         symbol_list = []
@@ -56,7 +56,7 @@ class InfixToPostfixFormatter(IFormatter):
 
             if ch.isspace():
                 if (temp_symbol != ""
-                        and not calc_utils.is_float_str(temp_symbol)): # make sure to only separate if not a number
+                        and not calc_utils.is_float_str(temp_symbol)):  # make sure to only separate if not a number
                     symbol_list.append(temp_symbol)
                     temp_symbol = ""
             elif ((temp_symbol + ch) in self._defined_ops.get_symbols()) or ((temp_symbol + ch) in closing_symbols):
@@ -184,19 +184,19 @@ class InfixToPostfixFormatter(IFormatter):
                     postfix_expression.append(float(symbol))
                 except ValueError:
                     raise FormattingError(f"Error: Failed to cast '{symbol}' to a floating point value", i)
-            elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]: # if symbol is a closing symbol
+            elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if symbol is a closing symbol
                 self.free_until_start_of_container(postfix_expression)
 
-                curr_op = self._op_stack.pop() # pop the container symbol form the stack
-                postfix_expression.append(curr_op) # add the container symbol to final expression
+                curr_op = self._op_stack.pop()  # pop the container symbol form the stack
+                postfix_expression.append(curr_op)  # add the container symbol to final expression
 
                 opened_containers[curr_op] -= 1  # reduce opened containers count
-                self._left_operators.pop() # also pop the container symbol from the left operators stack
+                self._left_operators.pop()  # also pop the container symbol from the left operators stack
 
                 # if the count of this container reached 0, delete it from the dictionary
                 if opened_containers[curr_op] == 0:
                     opened_containers.pop(curr_op)
-            elif symbol in self._defined_ops.get_symbols(): # if symbol is an operator
+            elif symbol in self._defined_ops.get_symbols():  # if symbol is an operator
                 curr_op = self._defined_ops.get_operator(expression, i)
 
                 # should throw an exception if the operator is in an illegal position

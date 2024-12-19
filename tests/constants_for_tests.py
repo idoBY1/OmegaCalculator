@@ -1,5 +1,5 @@
 from src import calculator
-from src.calculatorLogic import defined_operators, expression_formatter, operator, solver
+from src.calculatorLogic import operator
 
 test_calculator = calculator.Calculator()
 

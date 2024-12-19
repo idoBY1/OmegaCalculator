@@ -9,7 +9,8 @@ from src.calculatorLogic.defined_operators import Operator
 
 HIGHEST_OPERATOR_PRIORITY = 999  # All operators should have equal or lower priority from this value
 
-MAX_ITER = 100000 # The max amount of full iterations allowed for the calculator to perform on a single operation
+MAX_ITER = 100000  # The max amount of full iterations allowed for the calculator to perform on a single operation
+
 
 # Subclasses of Operator
 class UnaryOperator(Operator):
@@ -477,7 +478,7 @@ class SumDigits(UnaryOperator):
             raise CalculationError(f"Error: Cannot calculate the sum of digits of a negative number ({num}# = ???)")
 
         str_num = format(num, f".{SumDigits.ROUNDING_DIGITS}g")
-        str_num = str_num.lower().split("e", 1)[0] # remove exponent
+        str_num = str_num.lower().split("e", 1)[0]  # remove exponent
 
         if len(str_num) > SumDigits.MAX_NUMBER_DIGITS:
             raise CalculationError(f"Error: Cannot calculate sum of digits for a number with "

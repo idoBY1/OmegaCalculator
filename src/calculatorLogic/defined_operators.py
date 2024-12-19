@@ -30,7 +30,6 @@ class Operator(ABC):
         return self._symbol
 
 
-
 class IDefinedOperators(ABC):
     """
     A class that implements this interface will provide the operators for the calculator.
@@ -179,23 +178,23 @@ class OmegaDefinedOperators(BaseDefinedOperators):
         op_symbol = expression[position]
 
         if op_symbol == '-':
-                if position <= 0: # if the first symbol, must be unary minus
-                    return self._get_overloaded_by_class(op_symbol, operator.Minus)
+            if position <= 0:  # if the first symbol, must be unary minus
+                return self._get_overloaded_by_class(op_symbol, operator.Minus)
 
-                try:
-                    prev_op = self.get_operator(expression, position - 1)
-                except ValueError:
-                    # previous symbol was not an operator
-                    return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
+            try:
+                prev_op = self.get_operator(expression, position - 1)
+            except ValueError:
+                # previous symbol was not an operator
+                return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
 
-                if (isinstance(prev_op, operator.ContainerOperator) # if start of an independent expression
-                        or isinstance(prev_op, operator.Minus)):  # or if the previous operator is unary minus
-                    return self._get_overloaded_by_class(op_symbol, operator.Minus)
-                elif (isinstance(prev_op, operator.BinaryOperator) # if after an operator that requires a value
-                      or (isinstance(prev_op, operator.UnaryOperator)
-                          and prev_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER)):
-                    return self._get_overloaded_by_class(op_symbol, operator.NegativeSign)
-                else: # default case
-                    return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
+            if (isinstance(prev_op, operator.ContainerOperator)  # if start of an independent expression
+                    or isinstance(prev_op, operator.Minus)):  # or if the previous operator is unary minus
+                return self._get_overloaded_by_class(op_symbol, operator.Minus)
+            elif (isinstance(prev_op, operator.BinaryOperator)  # if after an operator that requires a value
+                  or (isinstance(prev_op, operator.UnaryOperator)
+                      and prev_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER)):
+                return self._get_overloaded_by_class(op_symbol, operator.NegativeSign)
+            else:  # default case
+                return self._get_overloaded_by_class(op_symbol, operator.Subtraction)
         else:
             return self._op_dict[op_symbol]

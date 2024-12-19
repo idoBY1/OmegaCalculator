@@ -2,7 +2,7 @@ from typing import List, Any
 
 import pytest
 
-from src.calculatorLogic import expression_formatter, defined_operators, operator, calc_errors
+from src.calculatorLogic import calc_errors
 from tests.constants_for_tests import postfix_formatter, ops, minus, sub, sign
 
 

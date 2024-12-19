@@ -1,9 +1,10 @@
-
 def delete_whitespace(expression: str) -> str:
     return "".join(expression.split())
 
+
 def organize_whitespace(expression: str) -> str:
     return " ".join(expression.split())
+
 
 def is_float_str(value: str) -> bool:
     # Handling the case for one decimal point
