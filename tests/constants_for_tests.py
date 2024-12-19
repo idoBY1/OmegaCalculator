@@ -1,8 +1,11 @@
+from src import calculator
 from src.calculatorLogic import defined_operators, expression_formatter, operator, solver
 
-def_ops = defined_operators.OmegaDefinedOperators()
-postfix_formatter = expression_formatter.InfixToPostfixFormatter(def_ops)
-postfix_solver = solver.PostfixSolver()
+test_calculator = calculator.Calculator()
+
+def_ops = test_calculator.defined_operators
+postfix_formatter = test_calculator.formatter
+postfix_solver = test_calculator.solver
 ops = def_ops.get_operators_dict()
 
 # get the different '-' types
