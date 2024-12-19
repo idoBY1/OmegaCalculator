@@ -62,7 +62,13 @@ class ConsoleInteractionHandler(IUserInteractionHandler):
     def get_input_or_exit(self, exit_input: str, input_msg: str = "") -> Tuple[bool, str]:
         self._output_handler.output_str(input_msg)
 
-        user_input = self._input_handler.get_input_str()
+        try:
+            user_input = self._input_handler.get_input_str()
+        except KeyboardInterrupt:
+            self._output_handler.output_str(
+                f"Detected KeyboardInterrupt, if you want to exit the program enter '{exit_input}'.\n"
+            )
+            return True, "help"
 
         if user_input == exit_input:
             return False, ""
