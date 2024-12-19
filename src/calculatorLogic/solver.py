@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from math import inf
 from typing import List, Any
 
 import src.calculatorLogic.defined_operators
 from src.calculatorLogic import stack, operator
 from src.calculatorLogic.calc_errors import SolvingError
 
-ROUNDING_DIGITS = 16
+ROUNDING_DIGITS = 14
 
 
 class ISolver(ABC):
@@ -71,10 +70,5 @@ class PostfixSolver(ISolver):
 
         result = operand_stack.pop()
 
-        if result == inf:
-            raise SolvingError(f"Error: Result too large")
-        elif result == -inf:
-            raise SolvingError(f"Error: Result too small")
-
         # round the result number to avoid floating point operations errors
-        return round(result, ROUNDING_DIGITS)
+        return float(format(result, f".{ROUNDING_DIGITS}g"))

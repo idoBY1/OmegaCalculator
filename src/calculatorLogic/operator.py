@@ -1,7 +1,6 @@
 import math
 from abc import abstractmethod
 from enum import Enum
-from math import inf
 from typing import List
 
 from src.calculatorLogic import calc_utils, defined_operators
@@ -248,10 +247,7 @@ class Power(BinaryOperator):
         try:
             return math.pow(num1, num2)
         except OverflowError:
-            if num1 > 0:
-                return inf
-            else:
-                return -inf
+            raise CalculationError(f"Error: The result of {num1}^{num2} is too large")
 
 
 class Modulo(BinaryOperator):
@@ -448,9 +444,9 @@ class Factorial(UnaryOperator):
 
         res = 1.0
 
-        # if the amount of iterations is bigger than the max of allowed iterations, return inf
+        # if the amount of iterations is bigger than the max of allowed iterations, raise an error
         if round(num) + 1 > MAX_ITER:
-            return inf
+            raise CalculationError(f"Error: The result of {num}! is too large")
 
         for i in range(1, round(num) + 1):
             res *= i
@@ -467,7 +463,9 @@ class SumDigits(UnaryOperator):
     In an expression: x#
     """
 
-    MAX_NUMBER_DIGITS = 16
+    # avoids subtle bugs involving floating point precision
+    MAX_NUMBER_DIGITS = 12
+    ROUNDING_DIGITS = 14
 
     def __init__(self):
         self._symbol = '#'
@@ -478,7 +476,7 @@ class SumDigits(UnaryOperator):
         if num < 0:
             raise CalculationError(f"Error: Cannot calculate the sum of digits of a negative number ({num}# = ???)")
 
-        str_num = str(num)
+        str_num = format(num, f".{SumDigits.ROUNDING_DIGITS}g")
         str_num = str_num.lower().split("e", 1)[0] # remove exponent
 
         if len(str_num) > SumDigits.MAX_NUMBER_DIGITS:
