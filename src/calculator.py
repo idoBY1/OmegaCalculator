@@ -18,6 +18,18 @@ class Calculator:
         self.formatter = expression_formatter.InfixToPostfixFormatter(self.defined_operators)
         self.solver = solver.PostfixSolver()
 
+    def calculate(self, expression: str) -> float:
+        """
+        Get a mathematical expression as a string solve it and return the answer.
+        :param expression: Mathematical expression as a string.
+        :return: The result of the expression.
+        """
+        symbol_list = self.formatter.extract_symbols(expression)
+
+        formatted_expression = self.formatter.format_expression(symbol_list)
+
+        return self.solver.solve(formatted_expression)
+
     def run(self):
         """
         Run the Calculator.
@@ -39,7 +51,7 @@ class Calculator:
                     [s if not isinstance(op, operator.ContainerOperator) else s + op.get_end_symbol()
                      for (s, op) in self.defined_operators.get_operators_dict().items()]), end="\n\n")
 
-                self.user_interaction_handler.display("Possible additional commands: \n"
+                self.user_interaction_handler.display("Additional commands: \n"
                                                       f"{HELP_INPUT} - show this information.\n"
                                                       f"{EXIT_INPUT} - exit the program.\n")
             else:

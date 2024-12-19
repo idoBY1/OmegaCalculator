@@ -3,17 +3,11 @@ from typing import List, Any
 import pytest
 
 from src.calculatorLogic import expression_formatter, defined_operators, operator, calc_errors
+from tests.constants_for_tests import postfix_formatter, ops, minus, sub, sign
 
 
 class TestPostfixFormatter:
-    def_ops = defined_operators.OmegaDefinedOperators()
-    postfix_formatter = expression_formatter.InfixToPostfixFormatter(def_ops)
-    ops = def_ops.get_operators_dict()
 
-    # get the different '-' types
-    sub = def_ops._get_overloaded_by_class('-', operator.Subtraction)
-    minus = def_ops._get_overloaded_by_class('-', operator.Minus)
-    sign = def_ops._get_overloaded_by_class('-', operator.NegativeSign)
 
     @pytest.mark.parametrize(
         "expression, correct_expression",
@@ -37,7 +31,7 @@ class TestPostfixFormatter:
         ]
     )
     def test_extract_symbols(self, expression: str, correct_expression: List[str]):
-        assert TestPostfixFormatter.postfix_formatter.extract_symbols(expression) == correct_expression
+        assert postfix_formatter.extract_symbols(expression) == correct_expression
 
     @pytest.mark.parametrize(
         "expression, correct_expression",
@@ -81,7 +75,7 @@ class TestPostfixFormatter:
         ]
     )
     def test_format_expression(self, expression: List[str], correct_expression: List[Any]):
-        assert TestPostfixFormatter.postfix_formatter.format_expression(expression) == correct_expression
+        assert postfix_formatter.format_expression(expression) == correct_expression
 
     @pytest.mark.parametrize(
         "expression",
@@ -110,9 +104,13 @@ class TestPostfixFormatter:
             ["(", "1.3", "*", "-", ")"],
             ["(", "6", "+", "-", ")"],
             ["(", "3.9", "+", ")", "-"],
-            ["(", "2.6", "+", ")", ")"]
+            ["(", "2", "+", ")", ")"],
+            ["@", "5.3"],
+            ["-", "~", "-", "1"],
+            ["~", "#"],
+            ["-", ")", "2.53"]
         ]
     )
     def test_format_expression_raises(self, expression: List[str]):
         with pytest.raises(calc_errors.FormattingError):
-            TestPostfixFormatter.postfix_formatter.format_expression(expression)
+            postfix_formatter.format_expression(expression)
