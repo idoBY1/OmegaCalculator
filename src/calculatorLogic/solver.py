@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Any
 
-import src.calculatorLogic.defined_operators
-from src.calculatorLogic import stack, operator
+from src.calculatorLogic import stack, operator, defined_operators
 from src.calculatorLogic.calc_errors import SolvingError
 
 ROUNDING_DIGITS = 14
@@ -36,7 +35,7 @@ class PostfixSolver(ISolver):
         for symbol in formatted_expression:
             if isinstance(symbol, float):
                 operand_stack.push(symbol)
-            elif isinstance(symbol, src.calculatorLogic.defined_operators.Operator):
+            elif isinstance(symbol, defined_operators.Operator):
                 if isinstance(symbol, operator.BinaryOperator):
                     try:
                         # reverse order because of stack (LIFO)

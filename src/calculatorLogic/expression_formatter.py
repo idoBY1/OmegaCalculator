@@ -40,7 +40,8 @@ class InfixToPostfixFormatter(IFormatter):
     def __init__(self, defined_ops: defined_operators.IDefinedOperators):
         self._defined_ops = defined_ops
 
-        self._op_stack = stack.ListStack()
+        self._op_stack = stack.ListStack() # stack for storing operators before inserting them in an expression
+        self._left_operators = stack.ListStack() # stack for storing the left-operators (they behave a bit differently)
 
     def extract_symbols(self, expression: str) -> List[str]:
         symbol_list = []
@@ -86,16 +87,81 @@ class InfixToPostfixFormatter(IFormatter):
 
         return symbol_list
 
+    # helper function
+    def insert_operator(self, op: operator.Operator, postfix_expression: List[Any],
+                        opened_containers: Dict[operator.ContainerOperator, int]):
+        # if operator is a left unary operator, push to left_operators without performing any checks for now
+        if (isinstance(op, operator.UnaryOperator)
+                and op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER):
+            self._left_operators.push(op)
+        else:
+            if ((self._op_stack.is_empty()
+                 or op.get_priority() > self._op_stack.top().get_priority()
+                 or isinstance(self._op_stack.top(),
+                               operator.ContainerOperator))  # ignore priority at the start of a container
+                    and (self._left_operators.is_empty()
+                         or op.get_priority() > self._left_operators.top().get_priority()
+                         or isinstance(self._left_operators.top(), operator.ContainerOperator))):
+                # if the operator has higher priority than everything else already pushed
+                self._op_stack.push(op)
+            else:
+                # while the current operator has less priority than the top of the stack
+                while ((not self._op_stack.is_empty())
+                       and op.get_priority() <= self._op_stack.top().get_priority()
+                       and not isinstance(self._op_stack.top(), operator.ContainerOperator)):
+
+                    # if the current top left-operator has the highest priority
+                    if ((not self._left_operators.is_empty()) and self._left_operators.top().get_priority()
+                            >= self._op_stack.top().get_priority()
+                            and not isinstance(self._left_operators.top(), operator.ContainerOperator)):
+                        postfix_expression.append(self._left_operators.pop())
+                    else:
+                        # if the current regular operator at the top of the stack has the highest priority
+                        postfix_expression.append(self._op_stack.pop())
+
+                # check for the case that all regular operators have less priority than the current operator but
+                # the left-operators have more priority the current operator
+                while ((not self._left_operators.is_empty())
+                       and self._left_operators.top().get_priority() >= op.get_priority()
+                       and not isinstance(self._left_operators.top(), operator.ContainerOperator)):
+                    postfix_expression.append(self._left_operators.pop())
+
+                # after all for the operators with higher priority have been inserted to the final expression
+                self._op_stack.push(op)
+
+            # track opened containers
+            # counts the number of closing symbols that should appear later
+            if isinstance(op, operator.ContainerOperator):
+                if not op in opened_containers.keys():
+                    opened_containers[op] = 0
+
+                opened_containers[op] += 1
+                self._left_operators.push(op)
+
+    # helper function
+    def free_until_start_of_container(self, postfix_expression: List[Any]):
+        # while not reached opening symbol
+        while not isinstance(self._op_stack.top(), operator.ContainerOperator):
+            # if there is a left-operator with higher priority
+            if (self._left_operators.top().get_priority() >= self._op_stack.top().get_priority()
+                    and not isinstance(self._left_operators.top(), operator.ContainerOperator)):
+                postfix_expression.append(self._left_operators.pop())
+
+            postfix_expression.append(self._op_stack.pop())
+
+        # if all regular operators have been freed but there are still left-operators before the container symbol
+        while not isinstance(self._left_operators.top(), operator.ContainerOperator):
+            postfix_expression.append(self._left_operators.pop())
+
     def format_expression(self, expression: List[str]) -> List[Any]:
         self._op_stack.empty()
+        self._left_operators.empty()
         postfix_expression = []
 
         # A dictionary storing currently opened container operators waiting to be closed.
         # Used for checking if a char is a closing char of a container.
         # This dictionary also counts the number of currently open containers of this type
         opened_containers: Dict[operator.ContainerOperator, int] = {}
-
-        left_operators = stack.ListStack()
 
         for i in range(len(expression)):
             symbol = expression[i]
@@ -105,86 +171,46 @@ class InfixToPostfixFormatter(IFormatter):
                     postfix_expression.append(float(symbol))
                 except ValueError:
                     raise FormattingError(f"Error: Failed to cast '{symbol}' to a floating point value", i)
-            elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]:  # if ch is a closing symbol
-                while not isinstance(self._op_stack.top(), operator.ContainerOperator):  # if not reached opening symbol
-                    if (left_operators.top().get_priority() >= self._op_stack.top().get_priority()
-                            and not isinstance(left_operators.top(), operator.ContainerOperator)):
-                        postfix_expression.append(left_operators.pop())
+            elif symbol in [k.get_end_symbol() for k in opened_containers.keys()]: # if symbol is a closing symbol
+                self.free_until_start_of_container(postfix_expression)
 
-                    postfix_expression.append(self._op_stack.pop())
-
-                while not isinstance(left_operators.top(), operator.ContainerOperator):
-                    postfix_expression.append(left_operators.pop())
-
-                curr_op = self._op_stack.pop()
-
-                postfix_expression.append(curr_op)  # add opening symbol to final expression
+                curr_op = self._op_stack.pop() # pop the container symbol form the stack
+                postfix_expression.append(curr_op) # add the container symbol to final expression
 
                 opened_containers[curr_op] -= 1  # reduce opened containers count
-                left_operators.pop()
+                self._left_operators.pop() # also pop the container symbol from the left operators stack
 
+                # if the count of this container reached 0, delete it from the dictionary
                 if opened_containers[curr_op] == 0:
                     opened_containers.pop(curr_op)
-            elif symbol in self._defined_ops.get_symbols():
+            elif symbol in self._defined_ops.get_symbols(): # if symbol is an operator
                 curr_op = self._defined_ops.get_operator(expression, i)
 
+                # should throw an exception if the operator is in an illegal position
                 if isinstance(curr_op, (operator.UnaryOperator, operator.BinaryOperator)):
                     curr_op.check_position(expression, i, self._defined_ops)
 
-                # if operator is a left unary operator, push to left_operators without performing any checks for now
-                if (isinstance(curr_op, operator.UnaryOperator)
-                        and curr_op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER):
-                    left_operators.push(curr_op)
-                else:
-                    if ((self._op_stack.is_empty()
-                         or curr_op.get_priority() > self._op_stack.top().get_priority()
-                         or isinstance(self._op_stack.top(), operator.ContainerOperator))
-                            and (left_operators.is_empty()
-                                 or curr_op.get_priority() > left_operators.top().get_priority()
-                                 or isinstance(left_operators.top(), operator.ContainerOperator))):
-                        self._op_stack.push(curr_op)
-                    else:
-                        while ((not self._op_stack.is_empty())
-                               and curr_op.get_priority() <= self._op_stack.top().get_priority()
-                               and not isinstance(self._op_stack.top(), operator.ContainerOperator)):
-                            if ((not left_operators.is_empty()) and left_operators.top().get_priority()
-                                    >= self._op_stack.top().get_priority()
-                                    and not isinstance(left_operators.top(), operator.ContainerOperator)):
-                                postfix_expression.append(left_operators.pop())
-                            else:
-                                postfix_expression.append(self._op_stack.pop())
-
-                        while ((not left_operators.is_empty())
-                               and left_operators.top().get_priority() >= curr_op.get_priority()
-                               and not isinstance(left_operators.top(), operator.ContainerOperator)):
-                            postfix_expression.append(left_operators.pop())
-
-                        self._op_stack.push(curr_op)
-
-                    # track opened containers
-                    if isinstance(curr_op, operator.ContainerOperator):
-                        if not curr_op in opened_containers.keys():
-                            opened_containers[curr_op] = 0
-
-                        opened_containers[curr_op] += 1
-                        left_operators.push(curr_op)
+                self.insert_operator(curr_op, postfix_expression, opened_containers)
             else:
                 raise FormattingError(f"Error: Invalid expression, did not recognize symbol '{symbol}'", i)
 
+        # empty the operator stack if at the end of the expression
         while not self._op_stack.is_empty():
             curr_op = self._op_stack.pop()
 
-            while ((not left_operators.is_empty())
-                   and left_operators.top().get_priority() >= curr_op.get_priority()):
-                postfix_expression.append(left_operators.pop())
+            # if there are still left-operators with higher priority
+            while ((not self._left_operators.is_empty())
+                   and self._left_operators.top().get_priority() >= curr_op.get_priority()):
+                postfix_expression.append(self._left_operators.pop())
 
+            # if a container is encountered here, it has not been closed in the middle of the expression
             if isinstance(curr_op, operator.ContainerOperator):
                 raise FormattingError(f"Error: Unclosed container '{curr_op.get_symbol()}', "
                                       f"missing '{curr_op.get_end_symbol()}'")
 
             postfix_expression.append(curr_op)
 
-        while not left_operators.is_empty():
-            postfix_expression.append(left_operators.pop())
+        while not self._left_operators.is_empty():
+            postfix_expression.append(self._left_operators.pop())
 
         return postfix_expression

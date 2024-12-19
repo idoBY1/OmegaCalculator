@@ -127,7 +127,7 @@ class ContainerOperator(Operator):
     An operator that operates on a defined and enclosed part of an expression.
 
     Examples: brackets(())
-    (could be used for other purposes like implementing sin(x) or |x|)
+    (could be used for other purposes like implementing sin(x) or other functions)
     """
     _end_symbol: str
 
