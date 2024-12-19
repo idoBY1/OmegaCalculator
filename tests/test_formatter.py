@@ -2,7 +2,7 @@ from typing import List, Any
 
 import pytest
 
-from src.calculatorLogic import expression_formatter, defined_operators, operator
+from src.calculatorLogic import expression_formatter, defined_operators, operator, calc_errors
 
 
 class TestPostfixFormatter:
@@ -82,3 +82,37 @@ class TestPostfixFormatter:
     )
     def test_format_expression(self, expression: List[str], correct_expression: List[Any]):
         assert TestPostfixFormatter.postfix_formatter.format_expression(expression) == correct_expression
+
+    @pytest.mark.parametrize(
+        "expression",
+        [
+            ["(", "7.2", "+", "1.545"],
+            ["9.1", "+", ")"],
+            ["5.7", "+", "*"],
+            ["/", "224.3"],
+            ["!", "+", "8.9"],
+            ["6", "+", "~"],
+            ["(", "4.656", "+", "2.8", "*"],
+            ["(", "8.1", "+", ")"],
+            ["(", "1.9", "+", "5.2", ")", "*", "+"],
+            ["7.5", "+", "(", "3.7"],
+            ["(", "(", "39.3", "+", "6.1", ")"],
+            ["(", "4.8", "+", "7.61", ")", ")"],
+            ["3.2", "-", ")"],
+            ["(", "+", "5.9", ")"],
+            ["(", "2.1", "+", ")"],
+            ["(", "8.7", "*", ")"],
+            ["(", "!", "9", ")"],
+            ["-", ")"],
+            ["(", "-", ")"],
+            ["(", "7.8", "-", ")"],
+            ["(", "-", "4.5", "*", ")"],
+            ["(", "1.3", "*", "-", ")"],
+            ["(", "6", "+", "-", ")"],
+            ["(", "3.9", "+", ")", "-"],
+            ["(", "2.6", "+", ")", ")"]
+        ]
+    )
+    def test_format_expression_raises(self, expression: List[str]):
+        with pytest.raises(calc_errors.FormattingError):
+            TestPostfixFormatter.postfix_formatter.format_expression(expression)

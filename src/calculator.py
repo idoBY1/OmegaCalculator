@@ -29,7 +29,7 @@ class Calculator:
 
         while continue_running:
             symbol_list = self.formatter.extract_symbols(user_input)
-            print(symbol_list)
+            # print(symbol_list)
 
             if len(symbol_list) > 0 and symbol_list[0] == HELP_INPUT:
                 self.user_interaction_handler.display("Type a mathematical expression to get a solution. "
