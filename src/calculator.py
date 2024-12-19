@@ -30,6 +30,21 @@ class Calculator:
 
         return self.solver.solve(formatted_expression)
 
+    def display_help(self) -> None:
+        """
+        Display the help text that gives info about the calculator and available operators and commands.
+        """
+        self.user_interaction_handler.display("Type a mathematical expression to get a solution. "
+                                              "The possible operations are: ")
+
+        self.user_interaction_handler.display(", ".join(
+            [s if not isinstance(op, operator.ContainerOperator) else s + op.get_end_symbol()
+             for (s, op) in self.defined_operators.get_operators_dict().items()]), end="\n\n")
+
+        self.user_interaction_handler.display("Additional commands: \n"
+                                              f"{HELP_INPUT} - show this information.\n"
+                                              f"{EXIT_INPUT} - exit the program.\n")
+
     def run(self):
         """
         Run the Calculator.
@@ -44,20 +59,11 @@ class Calculator:
             # print(symbol_list)
 
             if len(symbol_list) > 0 and symbol_list[0] == HELP_INPUT:
-                self.user_interaction_handler.display("Type a mathematical expression to get a solution. "
-                                                      "The possible operations are: ")
-
-                self.user_interaction_handler.display(", ".join(
-                    [s if not isinstance(op, operator.ContainerOperator) else s + op.get_end_symbol()
-                     for (s, op) in self.defined_operators.get_operators_dict().items()]), end="\n\n")
-
-                self.user_interaction_handler.display("Additional commands: \n"
-                                                      f"{HELP_INPUT} - show this information.\n"
-                                                      f"{EXIT_INPUT} - exit the program.\n")
+                self.display_help()
             else:
                 try:
                     formatted_expression = self.formatter.format_expression(symbol_list)
-                    print([str(item) for item in formatted_expression])
+                    # print([str(item) for item in formatted_expression])
 
                     result = self.solver.solve(formatted_expression)
 

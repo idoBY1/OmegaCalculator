@@ -89,7 +89,14 @@ class InfixToPostfixFormatter(IFormatter):
 
     # helper function
     def insert_operator(self, op: operator.Operator, postfix_expression: List[Any],
-                        opened_containers: Dict[operator.ContainerOperator, int]):
+                        opened_containers: Dict[operator.ContainerOperator, int]) -> None:
+        """
+        Insert the operator to the stack. This function also makes sure to append the operators with higher priority
+        to the final expression so the order of operations will apply.
+        :param op: The operator to insert.
+        :param postfix_expression: The current formatted expression to append to.
+        :param opened_containers: The current opened containers dictionary.
+        """
         # if operator is a left unary operator, push to left_operators without performing any checks for now
         if (isinstance(op, operator.UnaryOperator)
                 and op.get_operand_pos() == operator.UnaryOperator.OperandPos.AFTER):
@@ -139,7 +146,13 @@ class InfixToPostfixFormatter(IFormatter):
                 self._left_operators.push(op)
 
     # helper function
-    def free_until_start_of_container(self, postfix_expression: List[Any]):
+    def free_until_start_of_container(self, postfix_expression: List[Any]) -> None:
+        """
+        Pops all the operators from the stack and appends them to the formatted expression until it encounters
+        an opening symbol of a container. After this function, the top operator in both operator stacks will be
+        the opening container.
+        :param postfix_expression: The current formatted expression to append to.
+        """
         # while not reached opening symbol
         while not isinstance(self._op_stack.top(), operator.ContainerOperator):
             # if there is a left-operator with higher priority
