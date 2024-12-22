@@ -66,9 +66,14 @@ class ConsoleInteractionHandler(IUserInteractionHandler):
             user_input = self._input_handler.get_input_str()
         except KeyboardInterrupt:
             self._output_handler.output_str(
-                f"Detected KeyboardInterrupt, if you want to exit the program enter '{exit_input}'.\n"
+                f"Detected KeyboardInterrupt, exiting program.\n"
             )
-            return True, "help"
+            return False, ""
+        except EOFError:
+            self._output_handler.output_str(
+                f"Detected EOF, exiting program.\n"
+            )
+            return False, ""
 
         if user_input == exit_input:
             return False, ""
