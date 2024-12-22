@@ -9,7 +9,7 @@ from src.calculatorLogic.defined_operators import Operator
 
 HIGHEST_OPERATOR_PRIORITY = 999  # All operators should have equal or lower priority from this value
 
-MAX_ITER = 100000  # The max amount of full iterations allowed for the calculator to perform on a single operation
+MAX_ITER = 10000  # The max amount of full iterations allowed for the calculator to perform on a single operation
 
 
 # Subclasses of Operator
@@ -451,6 +451,9 @@ class Factorial(UnaryOperator):
 
         for i in range(1, round(num) + 1):
             res *= i
+
+        if str(res) == "inf":
+            raise CalculationError(f"Error: The result of {num}! is too large")
 
         return res
 
